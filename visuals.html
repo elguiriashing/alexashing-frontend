@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#5BBFB5;--teal-hi:rgba(91,191,181,.4);--teal-dim:rgba(91,191,181,.1);--teal-glow:rgba(91,191,181,.05);
+  --cyan:#7DD4CE;
+  --dark:#05080A;--dark2:#070C0E;--dark3:#0A1014;
+  --surface:#0D1518;--surface2:#121D21;
+  --text:#E8F4F3;--text-muted:#7A9E9B;--text-dim:#2E4A48;
+  --border:rgba(91,191,181,.1);--border-hi:rgba(91,191,181,.35);
+  --gold:#C9A84C;
+  --red-warm:#8B3A2A;
+  --music:#C9A84C;
+  --music-dim:rgba(201,168,76,.5);
+  --visual:#6BA8A4;
+  --visual-dim:rgba(107,168,164,.5);
+  --tech:#C84B4B;
+  --tech-dim:rgba(200,75,75,.5);
+  --about:#7A8CFF;
+  --about-dim:rgba(122,140,255,.5);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;font-size:15px;line-height:1.7}
+
+/* NAV */
+/* ── NAV (UNIFIED) ── */
+nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:200;
+  background:rgba(8,7,5,0.7);
+  backdrop-filter:blur(16px);
+  border-bottom:0.5px solid var(--border);
+}
+
+.nav-inner{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:1.25rem 3rem;
+}
+
+.nav-left{justify-self:start}
+.nav-right{justify-self:end}
+
+.nav-logo{
+  font-family:'Playfair Display',serif;
+  font-size:1.15rem;
+  color:var(--teal);
+  letter-spacing:.04em;
+}
+
+.nav-center{
+  display:flex;
+  gap:2.5rem;
+  list-style:none;
+}
+
+.nav-center a{
+  text-decoration:none;
+  font-size:.75rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  transition:color .25s ease;
+}
+
+/* DEFAULT (muted colors) */
+.nav-music{color:var(--music-dim);}
+.nav-visual{color:var(--visual-dim);}
+.nav-tech{color:var(--tech-dim);}
+.nav-about{color:var(--about-dim);}
+
+/* HOVER (bright color) */
+.nav-music:hover{color:var(--music);}
+.nav-visual:hover{color:var(--visual);}
+.nav-tech:hover{color:var(--tech);}
+.nav-about:hover{color:var(--about);}
+
+/* ACTIVE (always white) */
+.nav-center a.active{
+  color:var(--text);
+}
+
+.nav-back{
+  font-size:.72rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  text-decoration:none;
+}
+
+.nav-back:hover{
+  color:var(--text-muted);
+}
+
+/* HERO */
+.hero{
+  position:relative;height:100vh;min-height:640px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 3rem 5rem;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(91,191,181,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 100% 60%, rgba(91,191,181,.05) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 60% at 0% 80%, rgba(60,120,160,.06) 0%, transparent 50%),
+    linear-gradient(175deg,#07100E 0%,#05080A 50%,#060A0D 100%);
+}
+/* Laser beam effects */
+.laser-wrap{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.laser{position:absolute;height:.5px;transform-origin:left center;opacity:0;animation:laserFade 4s ease-in-out infinite}
+.l1{top:35%;left:20%;width:45%;background:linear-gradient(to right,transparent,rgba(91,191,181,.3),transparent);transform:rotate(-8deg);animation-delay:0s}
+.l2{top:55%;left:40%;width:35%;background:linear-gradient(to right,transparent,rgba(91,191,181,.2),transparent);transform:rotate(12deg);animation-delay:1.5s}
+.l3{top:25%;left:55%;width:30%;background:linear-gradient(to right,transparent,rgba(125,212,206,.25),transparent);transform:rotate(-15deg);animation-delay:3s}
+.l4{top:70%;left:10%;width:50%;background:linear-gradient(to right,transparent,rgba(91,191,181,.15),transparent);transform:rotate(5deg);animation-delay:.8s}
+@keyframes laserFade{0%,100%{opacity:0}20%,80%{opacity:1}}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.4;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,8,10,.95) 0%,rgba(5,8,10,.15) 55%,transparent 100%)}
+.hero-content{position:relative;z-index:2}
+.hero-eyebrow{
+  font-size:.65rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);
+  margin-bottom:1rem;display:flex;align-items:center;gap:.9rem;
+}
+.hero-eyebrow::before{content:'';display:block;width:2rem;height:.5px;background:var(--teal)}
+h1.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(3.2rem,7.5vw,6.8rem);
+  font-weight:400;line-height:.95;letter-spacing:-.025em;color:var(--text);
+}
+h1.hero-title em{font-style:italic;color:var(--teal)}
+.hero-sub{
+  margin-top:1.5rem;max-width:520px;
+  color:var(--text-muted);font-weight:300;font-size:.95rem;line-height:1.8;
+}
+.hero-tags{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:2rem}
+.htag{
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-muted);border:0.5px solid var(--border);
+  padding:.35rem .9rem;transition:all .2s;cursor:default;
+}
+.htag:hover{border-color:var(--teal-hi);color:var(--teal)}
+.hero-scroll{position:absolute;bottom:2rem;right:3rem;z-index:2;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);writing-mode:vertical-rl;display:flex;align-items:center;gap:.6rem}
+.hero-scroll::after{content:'';display:block;width:.5px;height:2.5rem;background:linear-gradient(to bottom,var(--text-dim),transparent)}
+
+/* SECTION LABEL */
+.section-label{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:.8rem;margin-bottom:3rem}
+.section-label::before{content:'';display:block;width:1.5rem;height:.5px;background:var(--teal)}
+
+/* TWO WORLDS INTRO */
+.worlds{display:grid;grid-template-columns:1fr 1fr;border-top:0.5px solid var(--border)}
+.world{
+  padding:4.5rem 3rem;position:relative;overflow:hidden;
+  transition:background .3s;cursor:default;
+}
+.world:first-child{border-right:0.5px solid var(--border)}
+.world:hover{background:var(--dark2)}
+.world-num{
+  font-family:'Playfair Display',serif;font-size:5rem;font-weight:400;
+  opacity:.05;position:absolute;top:2.5rem;right:2.5rem;line-height:1;
+  color:var(--teal);user-select:none;transition:opacity .3s;
+}
+.world:hover .world-num{opacity:.1}
+.world h2{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,2.5vw,2.2rem);font-weight:400;line-height:1.15;color:var(--text);margin-bottom:1rem}
+.world h2 em{font-style:italic;color:var(--teal)}
+.world p{color:var(--text-muted);font-weight:300;font-size:.88rem;line-height:1.85;margin-bottom:1.5rem}
+.world-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.world-list li{font-size:.8rem;color:var(--text-muted);font-weight:300;display:flex;align-items:center;gap:.8rem}
+.world-list li::before{content:'';display:block;width:.35rem;height:.35rem;border:0.5px solid var(--teal);border-radius:50%;flex-shrink:0;opacity:.5}
+
+/* PHOTO GRID */
+.photo-section{padding:5rem 3rem;background:var(--dark2);border-top:0.5px solid var(--border)}
+.photo-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2rem}
+.photo-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:400;color:var(--text);line-height:1.1}
+.photo-header h2 em{font-style:italic;color:var(--teal)}
+.photo-filter{display:flex;gap:.5rem}
+.filter-btn{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);border:0.5px solid var(--border);padding:.38rem .9rem;cursor:pointer;background:none;font-family:'DM Sans',sans-serif;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{color:var(--teal);border-color:var(--teal-hi)}
+
+/* Masonry-style grid */
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:180px 180px;gap:1px;background:var(--border)}
+.photo-cell{
+  background:var(--surface);position:relative;overflow:hidden;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .3s;
+}
+.photo-cell-bg{
+  position:absolute;inset:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  transition:opacity 0.3s ease;
+  width:100%;
+  height:100%;
+}
+.photo-cell:hover .photo-cell-bg{opacity:0.9}
+.photo-cell:hover{background:var(--surface2)}
+.pc-wide{grid-column:span 2}
+.pc-tall{grid-row:span 2}
+.photo-cell-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(5,8,10,.8) 0%,transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+.photo-cell:hover .photo-cell-overlay{opacity:1}
+.photo-cell-info{
+  position:absolute;bottom:1rem;left:1rem;
+  opacity:0;transform:translateY(.4rem);transition:all .3s;z-index:2;
+}
+.photo-cell:hover .photo-cell-info{opacity:1;transform:translateY(0)}
+.photo-cell-title{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--text);font-weight:400}
+.photo-cell-cat{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-top:.15rem}
+.photo-placeholder{font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(91,191,181,.18);border:0.5px solid rgba(91,191,181,.1);padding:.3rem .6rem;text-align:center}
+
+/* EVENT PRODUCTION */
+.event-section{
+  padding:5rem 3rem;
+  border-top:0.5px solid var(--border);
+  background:var(--dark3);
+}
+.event-intro{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:3.5rem}
+.event-intro h2{font-family:'Playfair Display',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:400;line-height:1.1;color:var(--text)}
+.event-intro h2 em{font-style:italic;color:var(--teal)}
+.event-intro p{color:var(--text-muted);font-weight:300;font-size:.88rem;line-height:1.85}
+
+/* Rider-style equipment list */
+.rider{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+.rider-cat{
+  display:grid;grid-template-columns:200px 1fr auto;
+  align-items:center;gap:2rem;
+  background:var(--dark3);padding:1.5rem 2rem;
+  transition:background .25s;cursor:default;
+}
+.rider-cat:hover{background:var(--surface)}
+.rider-cat-name{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;font-weight:400;color:var(--text);
+}
+.rider-cat-items{
+  display:flex;gap:.5rem;flex-wrap:wrap;
+}
+.rider-item{
+  font-family:'DM Mono',monospace;
+  font-size:.62rem;letter-spacing:.06em;
+  color:var(--text-muted);
+  border:0.5px solid var(--border);
+  padding:.28rem .7rem;
+  transition:all .2s;
+}
+.rider-cat:hover .rider-item{border-color:rgba(91,191,181,.2);color:var(--text)}
+.rider-status{
+  font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+  padding:.3rem .8rem;border:0.5px solid;white-space:nowrap;
+}
+.rs-avail{color:var(--teal);border-color:var(--teal-hi)}
+.rs-hire{color:var(--text-muted);border-color:var(--border-hi)}
+
+/* PROCESS */
+.process-section{
+  padding:5rem 3rem;
+  border-top:0.5px solid var(--border);
+  background:var(--dark2);
+}
+.process-header{margin-bottom:3rem}
+.process-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:400;color:var(--text);line-height:1.1}
+.process-header h2 em{font-style:italic;color:var(--teal)}
+.process-header p{color:var(--text-muted);font-weight:300;font-size:.88rem;margin-top:.8rem;max-width:500px}
+
+.process-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border)}
+.step{
+  background:var(--dark2);padding:2rem 1.5rem;
+  position:relative;overflow:hidden;transition:background .3s;cursor:default;
+}
+.step:hover{background:var(--surface)}
+.step-arrow{
+  position:absolute;top:50%;right:-1px;z-index:2;
+  width:0;height:0;
+  border-style:solid;border-width:8px 0 8px 10px;
+  border-color:transparent transparent transparent var(--border);
+  transform:translateY(-50%);
+}
+.step:last-child .step-arrow{display:none}
+.step-num{
+  font-family:'DM Mono',monospace;
+  font-size:.62rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:1.2rem;
+}
+.step-title{
+  font-family:'Playfair Display',serif;
+  font-size:.95rem;font-weight:400;color:var(--text);margin-bottom:.5rem;
+}
+.step-desc{font-size:.78rem;color:var(--text-muted);font-weight:300;line-height:1.65}
+
+/* PACKAGES */
+.packages-section{padding:5rem 3rem;border-top:0.5px solid var(--border);background:var(--dark)}
+.packages-header{display:grid;grid-template-columns:1fr 1.5fr;gap:4rem;align-items:end;margin-bottom:3rem}
+.packages-header h2{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.4rem);font-weight:400;color:var(--text);line-height:1.1}
+.packages-header h2 em{font-style:italic;color:var(--teal)}
+.packages-header p{color:var(--text-muted);font-weight:300;font-size:.88rem;line-height:1.85}
+
+.pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.pkg{
+  background:var(--dark);padding:2.5rem 2rem;
+  position:relative;overflow:hidden;
+  transition:background .3s;cursor:default;
+}
+.pkg:hover{background:var(--surface)}
+.pkg::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--teal);transform:scaleX(0);transform-origin:left;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+}
+.pkg:hover::before{transform:scaleX(1)}
+.pkg.featured{background:var(--surface)}
+.pkg.featured::before{transform:scaleX(1)}
+.pkg-badge{
+  display:inline-block;
+  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);border:0.5px solid var(--teal-hi);
+  padding:.25rem .7rem;margin-bottom:1.2rem;
+}
+.pkg-name{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;color:var(--text);margin-bottom:.4rem}
+.pkg-desc{font-size:.8rem;color:var(--text-muted);font-weight:300;line-height:1.7;margin-bottom:1.5rem}
+.pkg-includes{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin-bottom:2rem}
+.pkg-includes li{font-size:.78rem;color:var(--text-muted);font-weight:300;display:flex;align-items:flex-start;gap:.7rem;line-height:1.5}
+.pkg-includes li::before{content:'↗';color:var(--teal);font-size:.65rem;margin-top:.1rem;flex-shrink:0}
+.pkg-cta{
+  width:100%;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--teal);border:0.5px solid var(--teal-hi);
+  padding:.85rem;cursor:pointer;background:none;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.pkg-cta:hover,.pkg.featured .pkg-cta{background:var(--teal);color:var(--dark)}
+.pkg.featured .pkg-cta:hover{background:var(--cyan)}
+
+/* CONTACT */
+.contact-bar{
+  border-top:0.5px solid var(--border);
+  padding:4rem 3rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--dark2);
+}
+.contact-bar h3{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:400;color:var(--text)}
+.contact-bar h3 em{font-style:italic;color:var(--teal)}
+.contact-bar p{color:var(--text-muted);font-size:.85rem;margin-top:.4rem;font-weight:300}
+.contact-btns{display:flex;gap:1rem}
+.btn-teal{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;background:var(--teal);color:var(--dark);border:none;padding:.85rem 2rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:background .2s}
+.btn-teal:hover{background:var(--cyan)}
+.btn-ghost{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--text-muted);border:0.5px solid var(--border-hi);padding:.85rem 2rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-ghost:hover{color:var(--teal);border-color:var(--teal-hi)}
+
+footer{border-top:0.5px solid var(--border);padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;background:var(--dark)}
+.footer-logo{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--teal)}
+.footer-links{display:flex;gap:2rem;list-style:none}
+.footer-links a{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--text-muted)}
+.footer-copy{font-size:.62rem;color:var(--text-dim)}
+</style>
+
+<style>
+/* MOBILE MENU TOGGLE - STYLES */
+.mobile-menu-toggle{display:none;position:absolute;top:1.5rem;right:1.5rem;background:var(--visual);border:none;color:var(--dark);font-size:1.2rem;padding:0.75rem;border-radius:4px;cursor:pointer;z-index:1001;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(107,168,164,0.3)}
+.mobile-menu-toggle:hover{background:var(--visual-light);transform:scale(1.05)}
+.mobile-menu-toggle:active{transform:scale(0.95)}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  :root{
+    --font-base:16px;
+    --spacing:1rem;
+  }
+  
+  /* GLOBAL MOBILE STYLES */
+  body{font-size:var(--font-base);line-height:1.5;overflow-x:hidden}
+  .container{padding:var(--spacing);width:100%;max-width:100vw}
+  
+  /* MOBILE MENU TOGGLE - SHOW ON MOBILE ONLY */
+  .mobile-menu-toggle{display:block}
+  
+  /* NAVIGATION MOBILE */
+  nav{padding:1rem;flex-direction:column;gap:1rem;position:relative}
+  .nav-left{margin-bottom:0.5rem}
+  .nav-center{display:none;position:absolute;top:100%;left:0;right:0;background:var(--dark);flex-direction:column;padding:1.5rem;border-bottom:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:0 0 8px 8px;z-index:1000;box-sizing:border-box}
+  .nav-center a{padding:1rem 1.5rem;font-size:1rem;display:block;width:100%;text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);transition:all 0.2s ease;box-sizing:border-box}
+  .nav-center a:hover{background:var(--visual-dim);color:var(--visual-light)}
+  .nav-center.active{display:flex}
+  .nav-logo{font-size:1.2rem}
+  
+  /* HERO MOBILE */
+  .hero{padding:3rem 1.5rem;min-height:50vh;box-sizing:border-box;overflow:hidden}
+  .hero-title{font-size:2rem;line-height:1.1;margin-bottom:1rem;word-wrap:break-word}
+  .hero-subtitle{font-size:1rem;margin:1rem 0;word-wrap:break-word}
+  
+  /* CONTENT MOBILE */
+  .section{padding:2rem 1rem;box-sizing:border-box;overflow:hidden}
+  .split{flex-direction:column;gap:2rem}
+  .split-left,.split-right{width:100%;box-sizing:border-box}
+  .tile{padding:1.5rem;margin-bottom:1rem;box-sizing:border-box}
+  .process-step{flex-direction:column;align-items:center;text-align:center;padding:1.5rem;box-sizing:border-box}
+  
+  /* FORMS MOBILE */
+  .form-container{padding:1.5rem;box-sizing:border-box;max-width:100%}
+  .form-row{flex-direction:column;gap:1rem}
+  .form-group{margin-bottom:1rem}
+  .form-submit{width:100%;padding:1rem;font-size:1rem;box-sizing:border-box}
+  
+  /* FOOTER MOBILE */
+  footer{padding:1rem;flex-direction:column;gap:1rem;text-align:center;box-sizing:border-box}
+  .footer-links{flex-direction:column;gap:0.5rem}
+  
+  /* ABOUT PAGE MOBILE */
+  .timeline{padding-left:1rem;box-sizing:border-box}
+  .timeline-item{padding-left:1.5rem;box-sizing:border-box}
+  .work-grid{grid-template-columns:1fr;gap:1rem;box-sizing:border-box}
+  
+  /* MUSIC PAGE MOBILE */
+  .gig-card{padding:1rem;box-sizing:border-box}
+  .media-tabs{flex-wrap:wrap;justify-content:center;gap:0.5rem}
+  .media-tab{font-size:0.8rem;padding:0.5rem 1rem;box-sizing:border-box}
+  
+  /* VISUALS PAGE MOBILE */
+  .pkg-card{padding:1rem;box-sizing:border-box}
+  .photo-grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.5rem;box-sizing:border-box;overflow-x:auto;max-width:100%}
+  .process-list{grid-template-columns:1fr;box-sizing:border-box}
+  
+  /* TECH PAGE MOBILE */
+  .tech-card{padding:1.5rem;box-sizing:border-box}
+  .projects-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;box-sizing:border-box;overflow-x:auto;max-width:100%;display:flex;flex-wrap:nowrap}
+  
+  /* CONTACT PAGE MOBILE */
+  .contact-section{padding:2rem 1rem;box-sizing:border-box}
+  .hero-scroll{margin:2rem auto;max-width:90vw;box-sizing:border-box}
+  
+  /* ADMIN DASHBOARD MOBILE */
+  .admin-sidebar{transform:translateX(-100%);transition:transform 0.3s;width:100%;box-sizing:border-box}
+  .admin-sidebar.open{transform:translateX(0)}
+  .admin-main{margin-left:0;box-sizing:border-box}
+  .admin-content{padding:1rem;box-sizing:border-box}
+  .dashboard-grid{grid-template-columns:1fr;gap:1rem}
+  .admin-table{overflow-x:auto;box-sizing:border-box}
+  .table-header{flex-direction:column;gap:0.5rem}
+  .table-actions{flex-direction:column;gap:0.5rem;margin-top:0.5rem}
+  .admin-table table{font-size:0.8rem;box-sizing:border-box}
+  .admin-table th,.admin-table td{padding:0.5rem;box-sizing:border-box}
+  .tabs{flex-wrap:wrap;gap:0.5rem}
+  .tab{font-size:0.8rem;padding:0.5rem 1rem;box-sizing:border-box}
+  .upload-area{padding:2rem;box-sizing:border-box}
+  .modal-content{margin:5%;width:90%;max-width:none;box-sizing:border-box}
+  .form-actions{flex-direction:column;gap:0.5rem}
+}
+
+@media (max-width: 480px) {
+  .hero-title{font-size:2rem}
+  .hero-subtitle{font-size:0.9rem}
+  .discipline{padding:1.5rem 1rem}
+  .timeline-item{padding-left:1rem}
+  .gig-card{padding:0.75rem}
+  .pkg-card{padding:0.75rem}
+  .tech-card{padding:1rem}
+  .admin-table{font-size:0.7rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+
+    <div class="nav-left">
+      <a href="index.html" class="nav-back">← All Worlds</a>
+    </div>
+
+    <ul class="nav-center">
+  <li><a href="music.html" class="nav-music">Music</a></li>
+  <li><a href="visuals.html" class="nav-visual active">Visual</a></li>
+  <li><a href="tech.html" class="nav-tech" >Tech</a></li>
+  <li><a href="about.html" class="nav-about" >About</a></li>
+</ul>
+
+    <div class="nav-right">
+      <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+      <div class="nav-logo">Alex Ashing</div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="laser-wrap">
+    <div class="laser l1"></div>
+    <div class="laser l2"></div>
+    <div class="laser l3"></div>
+    <div class="laser l4"></div>
+  </div>
+  <div class="grain"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Dual Visual Expertise</div>
+    <h1 class="hero-title">Frame,<br><em>Stage</em><br>&amp; Vision.</h1>
+    <p class="hero-sub">Two complementary visual disciplines: creating compelling photography and cinematography for music videos and modeling shoots, while also delivering immersive VJ performances and festival FX that transform spaces and captivate audiences.</p>
+    <div class="hero-tags">
+      <span class="htag">Photography</span>
+      <span class="htag">Modeling Shoots</span>
+      <span class="htag">Music Videos</span>
+      <span class="htag">Cinematography</span>
+      <span class="htag">VJ Performances</span>
+      <span class="htag">Festival FX</span>
+      <span class="htag">Visual Direction</span>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</div>
+
+<!-- TWO WORLDS -->
+<div class="worlds">
+  <div class="world">
+    <div class="world-num">I</div>
+    <div class="section-label">Visual Arts</div>
+    <h2>Frame &amp;<br><em>Motion.</em></h2>
+    <p>Creating compelling visual narratives through photography and cinematography. From intimate modeling sessions that capture authentic personality to dynamic music videos that amplify sonic storytelling, every frame is crafted with intention and artistic vision.</p>
+    <ul class="world-list">
+      <li>Professional photography for modeling portfolios and campaigns</li>
+      <li>Cinematic music video production and direction</li>
+      <li>Behind-the-scenes coverage and content creation</li>
+      <li>Editorial and commercial photography services</li>
+      <li>Visual storytelling for brands and artists</li>
+      <li>Custom content creation for digital platforms</li>
+    </ul>
+  </div>
+  <div class="world">
+    <div class="world-num">II</div>
+    <div class="section-label">Event Production</div>
+    <h2>Transform the<br><em>Space.</em></h2>
+    <p>Live visual performances and festival effects that create immersive experiences. From real-time VJ sets that respond to music energy to large-scale festival FX installations, I transform venues into unforgettable visual environments.</p>
+    <ul class="world-list">
+      <li>Live VJ performances for clubs and festivals</li>
+      <li>Real-time visual synthesis and mapping</li>
+      <li>Festival-scale FX installations and programming</li>
+      <li>Immersive lighting and visual environments</li>
+      <li>Audio-reactive visual systems</li>
+      <li>Complete visual production for events</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PHOTO / VISUAL GRID -->
+<div class="photo-section">
+  <div class="photo-header">
+    <h2>Selected<br><em>work.</em></h2>
+    <div class="photo-filter">
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Photo</button>
+      <button class="filter-btn">Film</button>
+      <button class="filter-btn">Live VJ</button>
+      <button class="filter-btn">Events</button>
+    </div>
+  </div>
+  <div class="photo-grid">
+    <div class="photo-cell pc-wide pc-tall">
+      <div class="photo-cell-bg" style="background-image:url('media/visuals/hero-shot.jpg')"></div>
+      <div class="photo-cell-overlay"></div>
+      <div class="photo-cell-info"><div class="photo-cell-title">Club Night, Barcelona</div><div class="photo-cell-cat">Event Photography · VJ</div></div>
+    </div>
+    <div class="photo-cell">
+      <div class="photo-cell-bg" style="background-image:url('media/visuals/portrait-shoot.jpg')"></div>
+      <div class="photo-cell-overlay"></div>
+      <div class="photo-cell-info"><div class="photo-cell-title">Editorial Portrait</div><div class="photo-cell-cat">Photography</div></div>
+    </div>
+    <div class="photo-cell">
+      <div class="photo-cell-bg" style="background-image:url('media/visuals/laser-install.jpg')"></div>
+      <div class="photo-cell-overlay"></div>
+      <div class="photo-cell-info"><div class="photo-cell-title">Laser Install</div><div class="photo-cell-cat">Event Production</div></div>
+    </div>
+    <div class="photo-cell">
+      <div class="photo-cell-bg" style="background-image:url('media/visuals/music-video-still.jpg')"></div>
+      <div class="photo-cell-overlay"></div>
+      <div class="photo-cell-info"><div class="photo-cell-title">Music Video</div><div class="photo-cell-cat">Film · Direction</div></div>
+    </div>
+    <div class="photo-cell">
+      <div class="photo-cell-bg" style="background-image:url('media/visuals/vj-visuals.jpg')"></div>
+      <div class="photo-cell-overlay"></div>
+      <div class="photo-cell-info"><div class="photo-cell-title">Live VJ Set</div><div class="photo-cell-cat">Visual Performance</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT PRODUCTION — RIDER STYLE -->
+<div class="event-section">
+  <div class="event-intro">
+    <h2>The full<br><em>production rider.</em></h2>
+    <p>Everything I work with, all in one place. If it makes an event look or sound right, it's on this list. Mix and match based on what your event needs — I'll advise on what's essential and what's an upgrade.</p>
+  </div>
+  <div class="rider">
+    <div class="rider-cat">
+      <div class="rider-cat-name">Sound</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">PA Systems</span>
+        <span class="rider-item">FOH Mixing</span>
+        <span class="rider-item">Monitor Mixing</span>
+        <span class="rider-item">DI Boxes</span>
+        <span class="rider-item">Stage Boxes</span>
+        <span class="rider-item">Subwoofers</span>
+        <span class="rider-item">IEM</span>
+      </div>
+      <span class="rider-status rs-avail">Available</span>
+    </div>
+    <div class="rider-cat">
+      <div class="rider-cat-name">Lighting</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">LED Moving Heads</span>
+        <span class="rider-item">Wash Fixtures</span>
+        <span class="rider-item">Spotlights</span>
+        <span class="rider-item">DMX Control</span>
+        <span class="rider-item">Uplighting</span>
+        <span class="rider-item">Strobe</span>
+        <span class="rider-item">Stage Blinders</span>
+      </div>
+      <span class="rider-status rs-avail">Available</span>
+    </div>
+    <div class="rider-cat">
+      <div class="rider-cat-name">Lasers</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">RGB Scanning</span>
+        <span class="rider-item">Wide-field Beam</span>
+        <span class="rider-item">ILDA Control</span>
+        <span class="rider-item">Aerial Effects</span>
+        <span class="rider-item">Tunnel Beams</span>
+      </div>
+      <span class="rider-status rs-hire">On request</span>
+    </div>
+    <div class="rider-cat">
+      <div class="rider-cat-name">Atmosphere</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">Low Haze</span>
+        <span class="rider-item">Fog Machines</span>
+        <span class="rider-item">CO₂ Jets</span>
+        <span class="rider-item">Confetti Cannons</span>
+        <span class="rider-item">Cryo FX</span>
+      </div>
+      <span class="rider-status rs-hire">On request</span>
+    </div>
+    <div class="rider-cat">
+      <div class="rider-cat-name">Live Visuals</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">VJing / Resolume</span>
+        <span class="rider-item">Video Mapping</span>
+        <span class="rider-item">LED Screen Content</span>
+        <span class="rider-item">IMAG Relay</span>
+        <span class="rider-item">Custom Visuals</span>
+      </div>
+      <span class="rider-status rs-avail">Available</span>
+    </div>
+    <div class="rider-cat">
+      <div class="rider-cat-name">Photo &amp; Film</div>
+      <div class="rider-cat-items">
+        <span class="rider-item">Event Photography</span>
+        <span class="rider-item">Music Video</span>
+        <span class="rider-item">Cinematic Shoots</span>
+        <span class="rider-item">BTS Coverage</span>
+        <span class="rider-item">Portrait Sessions</span>
+      </div>
+      <span class="rider-status rs-avail">Available</span>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="process-section">
+  <div class="process-header">
+    <div class="section-label">How it works</div>
+    <h2>From brief to<br><em>showtime.</em></h2>
+    <p>One point of contact from initial call to the last light going out. No handoffs, no confusion.</p>
+  </div>
+  <div class="process-steps">
+    <div class="step">
+      <div class="step-arrow"></div>
+      <div class="step-num">01</div>
+      <div class="step-title">Brief call</div>
+      <div class="step-desc">Tell me the event — capacity, venue, vibe, budget, date. 15 mins is enough.</div>
+    </div>
+    <div class="step">
+      <div class="step-arrow"></div>
+      <div class="step-num">02</div>
+      <div class="step-title">Spec & quote</div>
+      <div class="step-desc">I put together a production spec and quote tailored to what you actually need.</div>
+    </div>
+    <div class="step">
+      <div class="step-arrow"></div>
+      <div class="step-num">03</div>
+      <div class="step-title">Venue visit</div>
+      <div class="step-desc">Site check — acoustics, power, rigging points, sight lines. I plan everything in advance.</div>
+    </div>
+    <div class="step">
+      <div class="step-arrow"></div>
+      <div class="step-num">04</div>
+      <div class="step-title">Load in &amp; set up</div>
+      <div class="step-desc">I arrive early. Everything is installed, tested, and soundchecked before doors open.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-title">Show time</div>
+      <div class="step-desc">I'm on the desk — or behind the camera — for the whole event. Problems get solved before they become problems.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PACKAGES -->
+<div class="packages-section">
+  <div class="packages-header">
+    <h2>Starting<br><em>points.</em></h2>
+    <p>These aren't rigid packages — they're a starting point for the conversation. Every event is different and every quote is custom. But this gives you a rough idea of what working together looks like at different scales.</p>
+  </div>
+  <div class="pkg-grid">
+    <div class="pkg">
+      <div class="pkg-badge">Intimate</div>
+      <div class="pkg-name">The Essentials</div>
+      <div class="pkg-desc">Small venue, tight setup. Everything you need, nothing you don't.</div>
+      <ul class="pkg-includes">
+        <li>PA system up to 200 capacity</li>
+        <li>Basic stage lighting rig</li>
+        <li>FOH sound operation</li>
+        <li>Optional: event photography</li>
+      </ul>
+      <button class="pkg-cta" onclick="window.location.href='contact.html?source=visuals'">Get a quote</button>
+    </div>
+    <div class="pkg featured">
+      <div class="pkg-badge">Most popular</div>
+      <div class="pkg-name">Full Production</div>
+      <div class="pkg-desc">The complete experience — sound, light, atmosphere, and visuals all dialled in.</div>
+      <ul class="pkg-includes">
+        <li>Full PA up to 1,000 capacity</li>
+        <li>Moving head lighting design</li>
+        <li>Laser system + haze/fog</li>
+        <li>Live VJ visuals operation</li>
+        <li>Event photography included</li>
+      </ul>
+      <button class="pkg-cta" onclick="window.location.href='contact.html?source=visuals'">Get a quote</button>
+    </div>
+    <div class="pkg">
+      <div class="pkg-badge">Visual only</div>
+      <div class="pkg-name">Visual &amp; Film</div>
+      <div class="pkg-desc">Photography, film, and visual content for events, artists, and brands.</div>
+      <ul class="pkg-includes">
+        <li>Event or editorial photography</li>
+        <li>Music video production</li>
+        <li>Cinematic short-form content</li>
+        <li>Edited deliverables within 7 days</li>
+      </ul>
+      <button class="pkg-cta" onclick="window.location.href='contact.html?source=visuals'">Get a quote</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="contact-bar">
+  <div>
+    <h3>Let's build<br>your <em>event.</em></h3>
+    <p>Tell me the date, the venue, and the vibe — I'll handle the rest.</p>
+  </div>
+  <div class="contact-btns">
+    <button class="btn-teal">Request a quote</button>
+    <button class="btn-ghost">See past events</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Alex Ashing</div>
+  <ul class="footer-links">
+    <li><a href="#">Instagram</a></li>
+    <li><a href="#">YouTube</a></li>
+    <li><a href="#">Vimeo</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 Alex Ashing · Visual &amp; Production</div>
+</footer>
+
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+
+<script>
+function toggleMobileMenu() {
+  const navLinks = document.querySelector('.nav-center');
+  navLinks.classList.toggle('active');
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+  const navLinks = document.querySelector('.nav-center');
+  const menuToggle = document.querySelector('.mobile-menu-toggle');
+  
+  if (!navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
+    navLinks.classList.remove('active');
+  }
+});
+</script>
+
+</body>
+</html>

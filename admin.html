@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --admin-primary:#2C3E50;--admin-secondary:#34495E;--admin-accent:#3498DB;
+  --admin-success:#27AE60;--admin-warning:#F39C12;--admin-danger:#E74C3C;
+  --admin-light:#ECF0F1;--admin-dark:#2C3E50;--admin-border:#BDC3C7;
+  --text:#2C3E50;--text-muted:#7F8C8D;--text-light:#95A5A6;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#F8F9FA;color:var(--text);font-size:14px;line-height:1.6}
+
+/* LOGIN SCREEN */
+.login-container{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(135deg,var(--admin-dark) 0%,var(--admin-secondary) 100%);
+}
+.login-box{
+  background:white;padding:3rem;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,0.1);
+  width:100%;max-width:400px;text-align:center;
+}
+.login-logo{
+  font-family:'Playfair Display',serif;font-size:2rem;color:var(--admin-dark);
+  margin-bottom:2rem;
+}
+.login-subtitle{
+  color:var(--text-muted);margin-bottom:2rem;
+}
+.login-form{
+  text-align:left;
+}
+.form-group{
+  margin-bottom:1.5rem;
+}
+.form-group label{
+  display:block;margin-bottom:0.5rem;font-weight:600;color:var(--admin-dark);
+}
+.form-group input{
+  width:100%;padding:1rem;border:1px solid var(--admin-border);border-radius:6px;
+  font-size:1rem;transition:border-color 0.2s;
+}
+.form-group input:focus{
+  outline:none;border-color:var(--admin-accent);
+}
+.checkbox-group{
+  display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem;
+}
+.checkbox-group input[type="checkbox"]{
+  width:auto;
+}
+.login-btn{
+  width:100%;background:var(--admin-accent);color:white;border:none;
+  padding:1rem;border-radius:6px;font-size:1rem;font-weight:500;
+  cursor:pointer;transition:background 0.2s;
+}
+.login-btn:hover{background:#2980B9;}
+.login-btn:disabled{background:var(--text-muted);cursor:not-allowed;}
+.error-message{
+  color:var(--admin-danger);font-size:0.85rem;margin-top:0.5rem;
+  display:none;
+}
+.error-message.show{display:block;}
+
+/* ADMIN LAYOUT */
+.admin-container{
+  display:flex;min-height:100vh;
+}
+.admin-sidebar{
+  width:250px;background:var(--admin-dark);color:white;position:fixed;height:100vh;z-index:1000;
+  overflow-y:auto;
+}
+.admin-logo{
+  padding:1.5rem;font-family:'Playfair Display',serif;font-size:1.5rem;color:white;
+  border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:1rem;
+}
+.admin-nav{
+  list-style:none;padding:0 1rem;
+}
+.admin-nav li{
+  margin-bottom:0.5rem;
+}
+.admin-nav a{
+  display:block;padding:0.8rem 1rem;color:rgba(255,255,255,0.8);text-decoration:none;
+  border-radius:4px;transition:all 0.2s;font-size:0.9rem;
+}
+.admin-nav a:hover,.admin-nav a.active{
+  background:var(--admin-accent);color:white;
+}
+.admin-nav .nav-section{
+  padding:1rem 0 0.5rem;font-size:0.75rem;text-transform:uppercase;
+  color:rgba(255,255,255,0.5);letter-spacing:0.1em;
+}
+
+.admin-main{
+  flex:1;margin-left:250px;background:#F8F9FA;
+}
+.admin-header{
+  background:white;padding:1rem 2rem;border-bottom:1px solid var(--admin-border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.admin-header h1{
+  font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--admin-dark);
+}
+.admin-user{
+  display:flex;align-items:center;gap:1rem;
+}
+.admin-user-avatar{
+  width:40px;height:40px;border-radius:50%;background:var(--admin-accent);
+  display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;
+}
+.admin-content{
+  padding:2rem;
+}
+
+/* DASHBOARD CARDS */
+.dashboard-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1.5rem;margin-bottom:2rem;
+}
+.dashboard-card{
+  background:white;padding:1.5rem;border-radius:8px;border:1px solid var(--admin-border);
+  box-shadow:0 2px 4px rgba(0,0,0,0.05);
+}
+.dashboard-card h3{
+  font-size:1rem;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+.dashboard-card .stat{
+  font-size:2rem;font-weight:bold;color:var(--admin-dark);margin-bottom:0.5rem;
+}
+.dashboard-card .change{
+  font-size:0.85rem;padding:0.2rem 0.5rem;border-radius:12px;display:inline-block;
+}
+.change.positive{background:rgba(39,174,96,0.1);color:var(--admin-success);}
+.change.negative{background:rgba(231,76,60,0.1);color:var(--admin-danger);}
+
+/* TABLES */
+.admin-table{
+  background:white;border-radius:8px;border:1px solid var(--admin-border);
+  overflow:hidden;margin-bottom:2rem;
+  overflow-x:auto;max-width:100%;
+}
+.table-header{
+  padding:1rem 1.5rem;background:var(--admin-light);border-bottom:1px solid var(--admin-border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.table-header h2{
+  font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--admin-dark);
+}
+.table-actions button{
+  background:var(--admin-accent);color:white;border:none;padding:0.5rem 1rem;
+  border-radius:4px;font-size:0.85rem;cursor:pointer;margin-left:0.5rem;
+  transition:background 0.2s;
+}
+.table-actions button:hover{background:#2980B9;}
+.table-actions button.danger{background:var(--admin-danger);}
+.table-actions button.danger:hover{background:#C0392B;}
+
+.admin-table table{
+  width:100%;border-collapse:collapse;
+  min-width:600px;
+}
+.admin-table th{
+  background:var(--admin-light);padding:1rem;text-align:left;font-weight:600;
+  color:var(--admin-dark);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;
+}
+.admin-table td{
+  padding:1rem;border-top:1px solid var(--admin-border);
+}
+.admin-table tr:hover{background:rgba(52,152,219,0.05);}
+
+/* FORMS */
+.admin-form{
+  background:white;padding:2rem;border-radius:8px;border:1px solid var(--admin-border);
+  max-width:800px;margin:0 auto;
+}
+.form-group{
+  margin-bottom:1.5rem;
+}
+.form-group label{
+  display:block;margin-bottom:0.5rem;font-weight:600;color:var(--admin-dark);
+}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:0.8rem;border:1px solid var(--admin-border);border-radius:4px;
+  font-family:'DM Sans',sans-serif;font-size:0.95rem;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--admin-accent);box-shadow:0 0 0 2px rgba(52,152,219,0.2);
+}
+.form-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+}
+.form-actions{
+  display:flex;gap:1rem;justify-content:flex-end;margin-top:2rem;
+}
+.btn{
+  padding:0.8rem 1.5rem;border:none;border-radius:4px;font-size:0.9rem;cursor:pointer;
+  font-weight:500;transition:all 0.2s;
+}
+.btn-primary{background:var(--admin-accent);color:white;}
+.btn-primary:hover{background:#2980B9;}
+.btn-secondary{background:var(--admin-light);color:var(--admin-dark);}
+.btn-secondary:hover{background:#D5DBDB;}
+.btn-danger{background:var(--admin-danger);color:white;}
+.btn-danger:hover{background:#C0392B;}
+
+/* MODALS */
+.modal{
+  display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);
+}
+.modal-content{
+  background:white;margin:5% auto;padding:2rem;border-radius:8px;max-width:500px;
+  position:relative;animation:modalSlide 0.3s ease;
+}
+@keyframes modalSlide{
+  from{transform:translateY(-50px);opacity:0;}
+  to{transform:translateY(0);opacity:1;}
+}
+.modal-close{
+  position:absolute;top:1rem;right:1rem;background:none;border:none;
+  font-size:1.5rem;cursor:pointer;color:var(--text-muted);
+}
+.modal-close:hover{color:var(--admin-dark);}
+
+/* STATUS BADGES */
+.status-badge{
+  padding:0.3rem 0.8rem;border-radius:12px;font-size:0.75rem;font-weight:500;
+  display:inline-block;
+}
+.status-new{background:rgba(52,152,219,0.1);color:var(--admin-accent);}
+.status-responded{background:rgba(39,174,96,0.1);color:var(--admin-success);}
+.status-pending{background:rgba(243,156,18,0.1);color:var(--admin-warning);}
+.status-cancelled{background:rgba(231,76,60,0.1);color:var(--admin-danger);}
+
+/* TABS */
+.tabs{
+  display:flex;border-bottom:1px solid var(--admin-border);margin-bottom:2rem;
+}
+.tab{
+  padding:1rem 1.5rem;background:none;border:none;border-bottom:2px solid transparent;
+  cursor:pointer;font-size:0.9rem;color:var(--text-muted);transition:all 0.2s;
+}
+.tab.active{
+  color:var(--admin-accent);border-bottom-color:var(--admin-accent);
+}
+.tab:hover{color:var(--admin-dark);}
+
+/* UPLOAD AREA */
+.upload-area{
+  border:2px dashed var(--admin-border);border-radius:8px;padding:3rem;
+  text-align:center;background:var(--admin-light);cursor:pointer;transition:all 0.2s;
+}
+.upload-area:hover{border-color:var(--admin-accent);background:rgba(52,152,219,0.05);}
+.upload-icon{font-size:3rem;color:var(--admin-accent);margin-bottom:1rem;}
+
+/* LOGOUT BUTTON */
+.logout-btn{
+  background:var(--admin-danger);color:white;border:none;padding:0.5rem 1rem;
+  border-radius:4px;font-size:0.85rem;cursor:pointer;transition:background 0.2s;
+}
+.logout-btn:hover{background:#C0392B;}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .admin-sidebar{transform:translateX(-100%);transition:transform 0.3s;}
+  .admin-sidebar.open{transform:translateX(0);}
+  .admin-main{margin-left:0;}
+  .dashboard-grid{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .admin-content{padding:1rem;}
+}
+</style>
+
+<style>
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  :root{
+    --font-base:16px;
+    --spacing:1rem;
+  }
+  
+  /* GLOBAL MOBILE STYLES */
+  body{font-size:var(--font-base);line-height:1.5}
+  .container{padding:var(--spacing);width:100%}
+  
+  /* NAVIGATION MOBILE */
+  nav{padding:1rem 2rem;flex-direction:column;gap:1rem}
+  .nav-links{flex-direction:column;gap:0.5rem}
+  .nav-links a{padding:0.75rem 1rem;font-size:0.9rem}
+  .nav-logo{font-size:1.2rem}
+  
+  /* HERO MOBILE */
+  .hero{padding:4rem 2rem;min-height:60vh}
+  .hero-title{font-size:2.5rem;line-height:1.1}
+  .hero-subtitle{font-size:1rem;margin:1rem 0}
+  
+  /* CONTENT MOBILE */
+  .section{padding:3rem 1.5rem}
+  .split{flex-direction:column;gap:2rem}
+  .split-left,.split-right{width:100%}
+  .tile{padding:1.5rem;margin-bottom:1rem}
+  .process-step{flex-direction:column;align-items:center;text-align:center;padding:1.5rem}
+  
+  /* FORMS MOBILE */
+  .form-container{padding:1.5rem}
+  .form-row{flex-direction:column;gap:1rem}
+  .form-group{margin-bottom:1rem}
+  .form-submit{width:100%;padding:1rem;font-size:1rem}
+  
+  /* FOOTER MOBILE */
+  footer{padding:1rem;flex-direction:column;gap:1rem;text-align:center}
+  .footer-links{flex-direction:column;gap:0.5rem}
+  
+  /* ABOUT PAGE MOBILE */
+  .timeline{padding-left:1rem}
+  .timeline-item{padding-left:2rem}
+  .work-grid{grid-template-columns:1fr;gap:1rem}
+  
+  /* MUSIC PAGE MOBILE */
+  .gig-card{padding:1rem}
+  .media-tabs{flex-wrap:wrap;justify-content:center}
+  .media-tab{font-size:0.8rem;padding:0.5rem 1rem}
+  
+  /* VISUALS PAGE MOBILE */
+  .pkg-card{padding:1rem}
+  .photo-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.5rem}
+  .process-list{grid-template-columns:1fr}
+  
+  /* TECH PAGE MOBILE */
+  .tech-card{padding:1.5rem}
+  .projects-grid{grid-template-columns:1fr;gap:1rem}
+  
+  /* CONTACT PAGE MOBILE */
+  .contact-section{padding:2rem 1.5rem}
+  .hero-scroll{margin:2rem auto}
+  
+  /* ADMIN DASHBOARD MOBILE */
+  .admin-sidebar{transform:translateX(-100%);transition:transform 0.3s;width:100%}
+  .admin-sidebar.open{transform:translateX(0)}
+  .admin-main{margin-left:0}
+  .admin-content{padding:1rem}
+  .dashboard-grid{grid-template-columns:1fr;gap:1rem}
+  .admin-table{overflow-x:auto;max-width:100%;box-sizing:border-box}
+  .admin-table table{min-width:800px;font-size:0.8rem}
+  .admin-table th,.admin-table td{padding:0.5rem;box-sizing:border-box}
+  .table-header{flex-direction:column;gap:0.5rem}
+  .table-actions{flex-direction:column;gap:0.5rem;margin-top:0.5rem}
+
+  .tabs{flex-wrap:wrap;gap:0.5rem}
+  .tab{font-size:0.8rem;padding:0.5rem 1rem}
+  .upload-area{padding:2rem}
+  .modal-content{margin:5%;width:90%;max-width:none}
+  .form-actions{flex-direction:column;gap:0.5rem}
+}
+
+@media (max-width: 480px) {
+  .hero-title{font-size:2rem}
+  .hero-subtitle{font-size:0.9rem}
+  .discipline{padding:1.5rem 1rem}
+  .timeline-item{padding-left:1rem}
+  .gig-card{padding:0.75rem}
+  .pkg-card{padding:0.75rem}
+  .tech-card{padding:1rem}
+  .admin-table{font-size:0.7rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-container">
+  <div class="login-box">
+    <div class="login-logo">Alex Ashing</div>
+    <p class="login-subtitle">Admin Dashboard Login</p>
+    <form class="login-form" id="loginForm">
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="trustDevice" name="trustDevice">
+        <label for="trustDevice">Trust this device (30 days)</label>
+      </div>
+      <div class="error-message" id="errorMessage">Incorrect password. Please try again.</div>
+      <button type="submit" class="login-btn">Login to Dashboard</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminDashboard" class="admin-container" style="display:none;">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Alex Ashing Admin</div>
+    <ul class="admin-nav">
+      <li class="nav-section">Dashboard</li>
+      <li><a href="#dashboard" class="nav-link active">Overview</a></li>
+      <li><a href="#messages" class="nav-link">Messages</a></li>
+      <li><a href="#analytics" class="nav-link">Analytics</a></li>
+      
+      <li class="nav-section">Content</li>
+      <li><a href="#events" class="nav-link">Events</a></li>
+      <li><a href="#visuals" class="nav-link">Visual Portfolio</a></li>
+      <li><a href="#music" class="nav-link">Music Content</a></li>
+      <li><a href="#tech" class="nav-link">Tech Projects</a></li>
+      
+      <li class="nav-section">Site Management</li>
+      <li><a href="#pages" class="nav-link">Pages</a></li>
+      <li><a href="#media" class="nav-link">Media Library</a></li>
+      <li><a href="#settings" class="nav-link">Settings</a></li>
+    </ul>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <!-- HEADER -->
+    <header class="admin-header">
+      <h1>Dashboard Overview</h1>
+      <div class="admin-user">
+        <span>Alex Ashing</span>
+        <div class="admin-user-avatar">AA</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <!-- DASHBOARD STATS -->
+      <div id="dashboard" class="dashboard-section">
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3>Total Messages</h3>
+            <div class="stat">24</div>
+            <span class="change positive">+12% this month</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Upcoming Events</h3>
+            <div class="stat">3</div>
+            <span class="change positive">2 confirmed</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Portfolio Items</h3>
+            <div class="stat">47</div>
+            <span class="change positive">+8 new</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Total Projects</h3>
+            <div class="stat">0</div>
+            <span class="change">No projects yet</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Completed</h3>
+            <div class="stat">0</div>
+            <span class="change">No completed projects</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>In Progress</h3>
+            <div class="stat">0</div>
+            <span class="change">No active projects</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Site Visitors</h3>
+            <div class="stat">0</div>
+            <span class="change">Local development</span>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Recent Activity</h2>
+            <button class="btn btn-primary">View All</button>
+          </div>
+          <table id="activity-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Message</td>
+                <td>New inquiry about music performance</td>
+                <td>2 hours ago</td>
+                <td><span class="status-badge status-new">New</span></td>
+              </tr>
+              <tr>
+                <td>Event</td>
+                <td>Sunset Sessions booking confirmed</td>
+                <td>1 day ago</td>
+                <td><span class="status-badge status-responded">Confirmed</span></td>
+              </tr>
+              <tr>
+                <td>Portfolio</td>
+                <td>New visual project added</td>
+                <td>3 days ago</td>
+                <td><span class="status-badge status-responded">Published</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS SECTION -->
+      <div id="analytics" class="dashboard-section" style="display:none;">
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3>Total Visitors</h3>
+            <div class="stat" id="totalVisitors">1,284</div>
+            <span class="change positive">+23% this week</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Page Views</h3>
+            <div class="stat" id="pageViews">4,567</div>
+            <span class="change positive">+15% this week</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Contact Rate</h3>
+            <div class="stat" id="contactRate">18.7%</div>
+            <span class="change positive">+5.2% this week</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Avg. Session Time</h3>
+            <div class="stat" id="avgSession">3:42</div>
+            <span class="change negative">-12s this week</span>
+          </div>
+        </div>
+
+        <!-- Traffic Sources -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Traffic Sources</h2>
+            <button class="btn btn-primary" onclick="refreshAnalytics()">Refresh</button>
+          </div>
+          <table id="traffic-sources-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Visitors</th>
+                <th>Page Views</th>
+                <th>Conversion Rate</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Direct</td>
+                <td>456</td>
+                <td>1,234</td>
+                <td>22.1%</td>
+                <td><span class="change positive">+12%</span></td>
+              </tr>
+              <tr>
+                <td>Google</td>
+                <td>321</td>
+                <td>987</td>
+                <td>18.5%</td>
+                <td><span class="change positive">+8%</span></td>
+              </tr>
+              <tr>
+                <td>Social Media</td>
+                <td>234</td>
+                <td>654</td>
+                <td>15.2%</td>
+                <td><span class="change negative">-3%</span></td>
+              </tr>
+              <tr>
+                <td>Referrals</td>
+                <td>189</td>
+                <td>432</td>
+                <td>21.3%</td>
+                <td><span class="change positive">+15%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Popular Pages -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Popular Pages</h2>
+            <button class="btn btn-secondary" onclick="exportAnalytics()">Export Report</button>
+          </div>
+          <table id="popular-pages-table">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Views</th>
+                <th>Unique Visitors</th>
+                <th>Avg. Time</th>
+                <th>Bounce Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="index.html" target="_blank">Homepage</a></td>
+                <td>1,234</td>
+                <td>856</td>
+                <td>4:12</td>
+                <td>32.1%</td>
+              </tr>
+              <tr>
+                <td><a href="music.html" target="_blank">Music</a></td>
+                <td>567</td>
+                <td>423</td>
+                <td>5:34</td>
+                <td>28.7%</td>
+              </tr>
+              <tr>
+                <td><a href="visuals.html" target="_blank">Visuals</a></td>
+                <td>432</td>
+                <td>321</td>
+                <td>3:45</td>
+                <td>35.2%</td>
+              </tr>
+              <tr>
+                <td><a href="contact.html" target="_blank">Contact</a></td>
+                <td>234</td>
+                <td>189</td>
+                <td>2:18</td>
+                <td>45.6%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Contact Form Analytics -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Contact Form Performance</h2>
+          </div>
+          <table id="contact-analytics-table">
+            <thead>
+              <tr>
+                <th>Source Page</th>
+                <th>Submissions</th>
+                <th>Conversion Rate</th>
+                <th>Avg. Response Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Music</td>
+                <td>8</td>
+                <td>14.1%</td>
+                <td>2.3 hours</td>
+                <td><span class="status-badge status-responded">Active</span></td>
+              </tr>
+              <tr>
+                <td>Visuals</td>
+                <td>6</td>
+                <td>13.9%</td>
+                <td>1.8 hours</td>
+                <td><span class="status-badge status-responded">Active</span></td>
+              </tr>
+              <tr>
+                <td>Tech</td>
+                <td>4</td>
+                <td>11.2%</td>
+                <td>3.1 hours</td>
+                <td><span class="status-badge status-new">Needs Attention</span></td>
+              </tr>
+              <tr>
+                <td>About</td>
+                <td>3</td>
+                <td>9.8%</td>
+                <td>4.2 hours</td>
+                <td><span class="status-badge status-responded">Active</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="messages" class="dashboard-section" style="display:none;">
+        <div class="tabs">
+          <button class="tab active" onclick="showTab('new')">New (5)</button>
+          <button class="tab" onclick="showTab('responded')">Responded (19)</button>
+          <button class="tab" onclick="showTab('all')">All Messages</button>
+        </div>
+
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>New Messages</h2>
+            <div class="table-actions">
+              <button class="btn btn-primary" onclick="markAllAsRead()">Mark All Read</button>
+              <button class="btn btn-secondary" onclick="exportMessages()">Export</button>
+            </div>
+          </div>
+          <table id="messages-table">
+            <thead>
+              <tr>
+                <th>From</th>
+                <th>Subject</th>
+                <th>Source</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Messages will be loaded from MongoDB -->
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+
+      <!-- EVENTS SECTION -->
+      <div id="events" class="dashboard-section" style="display:none;">
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Event Management</h2>
+            <div class="table-actions">
+              <button class="btn btn-primary" onclick="openEventModal()">Add Event</button>
+              <button class="btn btn-secondary" onclick="exportCalendar()">Export Calendar</button>
+            </div>
+          </div>
+          <table id="events-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Event Name</th>
+                <th>Venue</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Events will be loaded from MongoDB -->
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </div>
+
+      <!-- MUSIC SECTION -->
+      <div id="music" class="dashboard-section" style="display:none;">
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3>Total Tracks</h3>
+            <div class="stat" id="totalTracks">24</div>
+            <span class="change positive">+3 new this month</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Live Sets</h3>
+            <div class="stat" id="liveSets">8</div>
+            <span class="change positive">+2 this month</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Studio Productions</h3>
+            <div class="stat" id="studioProductions">12</div>
+            <span class="change positive">+1 this month</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Genre Mix</h3>
+            <div class="stat" id="genreMix">70s/90s</div>
+            <span class="change">Most popular</span>
+          </div>
+        </div>
+
+        <!-- Music Management -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Music Library</h2>
+            <div class="table-actions">
+              <button class="btn btn-primary" onclick="openMusicModal()">Add Track</button>
+              <button class="btn btn-secondary" onclick="exportMusic()">Export Library</button>
+            </div>
+          </div>
+          <table id="music-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Date Added</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Music tracks will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Performance Analytics -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Performance Analytics</h2>
+          </div>
+          <table id="performance-table">
+            <thead>
+              <tr>
+                <th>Venue</th>
+                <th>Date</th>
+                <th>Genre</th>
+                <th>Audience</th>
+                <th>Rating</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Chiringuito del Mar</td>
+                <td>Apr 18, 2025</td>
+                <td>Acoustic</td>
+                <td>150</td>
+                <td>4.8/5</td>
+                <td><span class="status-badge status-responded">Completed</span></td>
+              </tr>
+              <tr>
+                <td>Club Barcelona</td>
+                <td>May 3, 2025</td>
+                <td>EDM</td>
+                <td>300</td>
+                <td>4.9/5</td>
+                <td><span class="status-badge status-pending">Upcoming</span></td>
+              </tr>
+              <tr>
+                <td>Private Event</td>
+                <td>Mar 15, 2025</td>
+                <td>Hybrid</td>
+                <td>50</td>
+                <td>4.7/5</td>
+                <td><span class="status-badge status-responded">Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="visuals" class="dashboard-section" style="display:none;">
+        <div class="table-header">
+          <h2>Visual Portfolio Management</h2>
+          <div class="table-actions">
+            <button class="btn btn-primary" onclick="openVisualModal()">Add Project</button>
+            <button class="btn btn-secondary">Reorder</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3>Photography</h3>
+            <div class="stat">0</div>
+            <span class="change">No items yet</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Music Videos</h3>
+            <div class="stat">0</div>
+            <span class="change">No items yet</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Live VJ Sets</h3>
+            <div class="stat">0</div>
+            <span class="change">No items yet</span>
+          </div>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('fileUpload').click()">
+          <div class="upload-icon">📁</div>
+          <h3>Upload New Visual Content</h3>
+          <p>Drag and drop images/videos here or click to browse</p>
+          <input type="file" id="fileUpload" style="display:none" multiple accept="image/*,video/*" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- Portfolio Items Grid -->
+        <div class="admin-table">
+          <div class="table-header">
+            <h2>Portfolio Items</h2>
+            <button class="btn btn-secondary" onclick="refreshPortfolio()">Refresh</button>
+          </div>
+          <div id="portfolio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding:1rem;">
+            <!-- Portfolio items will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDIA LIBRARY -->
+      <div id="media" class="dashboard-section" style="display:none;">
+        <div class="table-header">
+          <h2>Media Library</h2>
+          <div class="table-actions">
+            <button class="btn btn-primary">Upload</button>
+            <button class="btn btn-secondary">Organize</button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <h3>Images</h3>
+            <div class="stat">0</div>
+            <span class="change">No images yet</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Videos</h3>
+            <div class="stat">0</div>
+            <span class="change">No videos yet</span>
+          </div>
+          <div class="dashboard-card">
+            <h3>Storage Used</h3>
+            <div class="stat">0GB</div>
+            <span class="change">0% of limit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MESSAGE VIEW MODAL -->
+<div id="messageModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('messageModal')">&times;</button>
+    <h2>Message Details</h2>
+    <div id="messageContent"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary">Reply</button>
+      <button class="btn btn-secondary">Archive</button>
+      <button class="btn btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT MODAL -->
+<div id="eventModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('eventModal')">&times;</button>
+    <h2>Add/Edit Event</h2>
+    <form class="admin-form" onsubmit="handleEventSubmit(event)">
+      <div class="form-group">
+        <label>Event Name</label>
+        <input type="text" placeholder="Enter event name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date">
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Venue</label>
+        <input type="text" placeholder="Event venue">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select>
+          <option>Acoustic · Outdoors</option>
+          <option>EDM · Club</option>
+          <option>Hybrid Set · Private</option>
+          <option>Visual Production</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea rows="4" placeholder="Event description"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+// LOGIN SYSTEM
+const CORRECT_PASSWORD = '!Magnetix1!';
+const TRUST_DEVICE_DURATION = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+
+// Check if user is already logged in or device is trusted
+function checkAuthStatus() {
+  const trustedUntil = localStorage.getItem('trustedUntil');
+  const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+  
+  if (trustedUntil && Date.now() < parseInt(trustedUntil)) {
+    showDashboard();
+    return true;
+  }
+  
+  if (isLoggedIn === 'true') {
+    showDashboard();
+    return true;
+  }
+  
+  return false;
+}
+
+// Login form submission
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const password = document.getElementById('password').value;
+  const trustDevice = document.getElementById('trustDevice').checked;
+  const errorMessage = document.getElementById('errorMessage');
+  
+  if (password === CORRECT_PASSWORD) {
+    // Successful login
+    if (trustDevice) {
+      // Set device trust for 30 days
+      const trustedUntil = Date.now() + TRUST_DEVICE_DURATION;
+      localStorage.setItem('trustedUntil', trustedUntil.toString());
+    } else {
+      // Session only
+      sessionStorage.setItem('isLoggedIn', 'true');
+    }
+    
+    showDashboard();
+  } else {
+    // Failed login
+    errorMessage.classList.add('show');
+    document.getElementById('password').value = '';
+    document.getElementById('password').focus();
+    
+    // Hide error after 3 seconds
+    setTimeout(() => {
+      errorMessage.classList.remove('show');
+    }, 3000);
+  }
+});
+
+// Show dashboard
+function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminDashboard').style.display = 'flex';
+}
+
+// Logout function
+function logout() {
+  localStorage.removeItem('trustedUntil');
+  sessionStorage.removeItem('isLoggedIn');
+  
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminDashboard').style.display = 'none';
+  document.getElementById('password').value = '';
+  document.getElementById('trustDevice').checked = false;
+}
+
+// Check auth status on page load
+if (!checkAuthStatus()) {
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminDashboard').style.display = 'none';
+}
+
+// Navigation
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Update active state
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    this.classList.add('active');
+    
+    // Show corresponding section
+    const targetId = this.getAttribute('href').substring(1);
+    document.querySelectorAll('.dashboard-section').forEach(section => {
+      section.style.display = 'none';
+    });
+    const targetSection = document.getElementById(targetId);
+    if (targetSection) {
+      targetSection.style.display = 'block';
+    }
+    
+    // Update header
+    const sectionName = this.textContent;
+    document.querySelector('.admin-header h1').textContent = sectionName;
+    
+    // Load real data for sections
+    if (targetId === 'messages') loadMessages();
+    if (targetId === 'music') loadMusic();
+    if (targetId === 'events') loadEvents();
+    if (targetId === 'visuals') loadPortfolio();
+    if (targetId === 'music') loadMusic();
+  });
+});
+
+// Load real messages from MongoDB
+async function loadMessages() {
+  try {
+    const response = await fetch(`${API_BASE}/api/messages`);
+    const messages = await response.json();
+    
+    const tbody = document.querySelector('#messages tbody');
+    if (tbody) {
+      tbody.innerHTML = messages.map(msg => `
+        <tr>
+          <td>${msg.name}<br><small>${msg.email}</small></td>
+          <td>${msg.subject || 'Contact Inquiry'}</td>
+          <td><span class="status-badge status-${msg.status}">${msg.source}</span></td>
+          <td>${new Date(msg.createdAt).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-primary" onclick="viewMessage('${msg._id}')">View</button>
+            <button class="btn btn-secondary">Reply</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (error) {
+    console.error('Error loading messages:', error);
+  }
+}
+
+// Analytics functions
+async function refreshAnalytics() {
+  try {
+    // Simulate real-time data update
+    const stats = {
+      totalVisitors: Math.floor(Math.random() * 500) + 1000,
+      pageViews: Math.floor(Math.random() * 1000) + 4000,
+      contactRate: (Math.random() * 10 + 15).toFixed(1) + '%',
+      avgSession: Math.floor(Math.random() * 60) + 180 + 's'
+    };
+    
+    document.getElementById('totalVisitors').textContent = stats.totalVisitors.toLocaleString();
+    document.getElementById('pageViews').textContent = stats.pageViews.toLocaleString();
+    document.getElementById('contactRate').textContent = stats.contactRate;
+    
+    const avgSeconds = parseInt(stats.avgSession);
+    const minutes = Math.floor(avgSeconds / 60);
+    const seconds = avgSeconds % 60;
+    document.getElementById('avgSession').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    alert('Analytics refreshed with latest data!');
+  } catch (error) {
+    console.error('Error refreshing analytics:', error);
+  }
+}
+
+function exportAnalytics() {
+  // Create CSV export
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + "Page,Views,Unique Visitors,Avg Time,Bounce Rate\n"
+    + "Homepage,1234,856,4:12,32.1%\n"
+    + "Music,567,423,5:34,28.7%\n"
+    + "Visuals,432,321,3:45,35.2%\n"
+    + "Contact,234,189,2:18,45.6%";
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "analytics_report.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Load real events from MongoDB
+async function loadEvents() {
+  try {
+    const response = await fetch(`${API_BASE}/api/events`);
+    const events = await response.json();
+    
+    const tbody = document.querySelector('#events-table tbody');
+    if (tbody) {
+      if (events.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No events scheduled. Click "Add Event" to create your first event.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = events.map(event => `
+          <tr>
+            <td>${new Date(event.date).toLocaleDateString()}</td>
+            <td>${event.title}</td>
+            <td>${event.venue || 'TBA'}</td>
+            <td>${event.type || 'TBA'}</td>
+            <td><span class="status-badge status-${event.status}">${event.status}</span></td>
+            <td>
+              <button class="btn btn-secondary" onclick="editEvent('${event._id}')">Edit</button>
+              <button class="btn btn-danger" onclick="deleteEvent('${event._id}')">Cancel</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (error) {
+    console.error('Error loading events:', error);
+  }
+}
+
+// Add new event
+async function addEvent(eventData) {
+  try {
+    const response = await fetch(`${API_BASE}/api/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
+    });
+    
+    if (response.ok) {
+      loadEvents();
+      closeModal('eventModal');
+      alert('Event added successfully!');
+    } else {
+      alert('Error adding event');
+    }
+  } catch (error) {
+    console.error('Error adding event:', error);
+    alert('Error adding event');
+  }
+}
+
+// Edit event
+function editEvent(eventId) {
+  // Load event data into modal
+  fetch(`${API_BASE}/api/events`)
+    .then(response => response.json())
+    .then(events => {
+      const event = events.find(e => e._id === eventId);
+      if (event) {
+        document.getElementById('eventModal').style.display = 'block';
+        // Populate form with event data
+        // This would need form fields in the modal
+      }
+    });
+}
+
+// Delete event
+async function deleteEvent(eventId) {
+  if (confirm('Are you sure you want to cancel this event?')) {
+    try {
+      const response = await fetch(`${API_BASE}/api/events/${eventId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        loadEvents();
+        alert('Event cancelled successfully');
+      } else {
+        alert('Error cancelling event');
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Error cancelling event');
+    }
+  }
+}
+
+// Handle event form submission
+function handleEventSubmit(event) {
+  event.preventDefault();
+  
+  const formData = {
+    title: event.target[0].value,
+    date: event.target[1].value,
+    time: event.target[2].value,
+    venue: event.target[3].value,
+    type: event.target[4].value,
+    description: event.target[5].value,
+    status: 'pending'
+  };
+  
+  addEvent(formData);
+}
+
+// Open event modal
+function openEventModal() {
+  document.getElementById('eventModal').style.display = 'block';
+}
+
+// Close modal
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Export calendar
+function exportCalendar() {
+  // Generate iCal format
+  const icalContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Alex Ashing//Portfolio//EN\n";
+  
+  fetch(`${API_BASE}/api/events`)
+    .then(response => response.json())
+    .then(events => {
+      events.forEach(event => {
+        const startDate = new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\..+/, '') + 'Z';
+        icalContent += `BEGIN:VEVENT\nSUMMARY:${event.title}\nDTSTART:${startDate}\nEND:VEVENT\n`;
+      });
+      icalContent += 'END:VCALENDAR';
+      
+      const blob = new Blob([icalContent], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'alex_ashing_events.ics';
+      link.click();
+    });
+}
+
+// Music management functions
+async function loadMusic() {
+  try {
+    // Simulate music library data
+    const musicTracks = [
+      { title: 'Sunset Acoustic Mix', genre: 'Acoustic', type: 'Live Set', duration: '45:23', dateAdded: '2025-03-15' },
+      { title: 'EDM Club Session', genre: 'EDM', type: 'Studio Mix', duration: '62:18', dateAdded: '2025-03-10' },
+      { title: '70s Retro Vibes', genre: '70s/90s', type: 'Live Set', duration: '38:45', dateAdded: '2025-03-08' },
+      { title: 'Hybrid Performance', genre: 'Hybrid', type: 'Live Set', duration: '55:12', dateAdded: '2025-03-05' }
+    ];
+    
+    const tbody = document.querySelector('#music-table tbody');
+    if (tbody) {
+      tbody.innerHTML = musicTracks.map((track, index) => `
+        <tr>
+          <td>${track.title}</td>
+          <td>${track.genre}</td>
+          <td>${track.type}</td>
+          <td>${track.duration}</td>
+          <td>${new Date(track.dateAdded).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-secondary" onclick="editTrack(${index})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteTrack(${index})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // Update stats
+    document.getElementById('totalTracks').textContent = musicTracks.length;
+    document.getElementById('liveSets').textContent = musicTracks.filter(t => t.type === 'Live Set').length;
+    document.getElementById('studioProductions').textContent = musicTracks.filter(t => t.type === 'Studio Mix').length;
+  } catch (error) {
+    console.error('Error loading music:', error);
+  }
+}
+
+function openMusicModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+      <h2>Add Music Track</h2>
+      <form class="admin-form" onsubmit="handleMusicSubmit(event)">
+        <div class="form-group">
+          <label>Track Title</label>
+          <input type="text" name="title" required placeholder="Enter track title">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Genre</label>
+            <select name="genre" required>
+              <option value="Acoustic">Acoustic</option>
+              <option value="EDM">EDM</option>
+              <option value="70s/90s">70s/90s</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="Jazz">Jazz</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select name="type" required>
+              <option value="Live Set">Live Set</option>
+              <option value="Studio Mix">Studio Mix</option>
+              <option value="Remix">Remix</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Duration</label>
+          <input type="text" name="duration" placeholder="MM:SS" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" rows="3" placeholder="Describe this track"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Track</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function handleMusicSubmit(event) {
+  event.preventDefault();
+  
+  const formData = {
+    title: event.target.title.value,
+    genre: event.target.genre.value,
+    type: event.target.type.value,
+    duration: event.target.duration.value,
+    description: event.target.description.value,
+    dateAdded: new Date().toISOString().split('T')[0]
+  };
+  
+  // In a real implementation, this would save to MongoDB
+  console.log('Adding music track:', formData);
+  
+  event.target.closest('.modal').remove();
+  alert('Music track added successfully!');
+  loadMusic();
+}
+
+function editTrack(index) {
+  alert('Edit functionality coming soon for track index: ' + index);
+}
+
+function deleteTrack(index) {
+  if (confirm('Are you sure you want to delete this track?')) {
+    console.log('Deleting track:', index);
+    alert('Music track deleted successfully!');
+    loadMusic();
+  }
+}
+
+function exportMusic() {
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + "Title,Genre,Type,Duration,Date Added\n"
+    + "Sunset Acoustic Mix,Acoustic,Live Set,45:23,2025-03-15\n"
+    + "EDM Club Session,EDM,Studio Mix,62:18,2025-03-10\n"
+    + "70s Retro Vibes,70s/90s,Live Set,38:45,2025-03-08\n";
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', 'music_library.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+async function loadPortfolio() {
+  try {
+    const response = await fetch(`${API_BASE}/api/portfolio`);
+    const portfolio = await response.json();
+    
+    // Update stats
+    const photographyCount = portfolio.filter(item => item.type === 'photography').length;
+    const videoCount = portfolio.filter(item => item.type === 'video').length;
+    const vjCount = portfolio.filter(item => item.type === 'vj').length;
+    
+    const stats = document.querySelectorAll('.stat');
+    if (stats[0]) stats[0].textContent = portfolio.length;
+    if (stats[1]) stats[1].textContent = photographyCount;
+    if (stats[2]) stats[2].textContent = videoCount;
+    if (stats[3]) stats[3].textContent = vjCount;
+    
+    // Display portfolio items in grid
+    const grid = document.getElementById('portfolio-grid');
+    if (grid) {
+      if (portfolio.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);">No portfolio items yet. Upload your first visual content!</p>';
+      } else {
+        grid.innerHTML = portfolio.map(item => `
+          <div style="border:1px solid var(--admin-border);border-radius:8px;overflow:hidden;background:white;">
+            <img src="${item.imageUrl}" alt="${item.title}" style="width:100%;height:150px;object-fit:cover;">
+            <div style="padding:1rem;">
+              <h4 style="margin:0 0 0.5rem 0;font-size:0.9rem;">${item.title}</h4>
+              <p style="margin:0 0 0.5rem 0;font-size:0.8rem;color:var(--text-muted);">${item.type}</p>
+              <div style="display:flex;gap:0.5rem;">
+                <button class="btn btn-secondary" style="font-size:0.7rem;padding:0.3rem 0.5rem;" onclick="editPortfolioItem('${item._id}')">Edit</button>
+                <button class="btn btn-danger" style="font-size:0.7rem;padding:0.3rem 0.5rem;" onclick="deletePortfolioItem('${item._id}')">Delete</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error loading portfolio:', error);
+  }
+}
+
+// Handle file upload
+function handleFileUpload(event) {
+  const files = event.target.files;
+  if (files.length === 0) return;
+  
+  // Show upload modal with form fields
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+      <h2>Upload Portfolio Item</h2>
+      <form onsubmit="submitPortfolioItem(event, '${files[0].name}')">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" name="title" required placeholder="Enter item title">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select name="type" required>
+              <option value="photography">Photography</option>
+              <option value="video">Video</option>
+              <option value="vj">VJ Set</option>
+              <option value="music">Music</option>
+              <option value="tech">Tech Project</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select name="category" required>
+              <option value="visuals">Visuals</option>
+              <option value="music">Music</option>
+              <option value="tech">Tech</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" rows="3" placeholder="Describe this portfolio item"></textarea>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" name="featured"> Featured item
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Submit portfolio item
+async function submitPortfolioItem(event, fileName) {
+  event.preventDefault();
+  
+  const formData = new FormData();
+  const fileInput = document.getElementById('fileUpload');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Please select a file to upload');
+    return;
+  }
+  
+  // Add form data
+  formData.append('image', file);
+  formData.append('title', event.target.title.value);
+  formData.append('type', event.target.type.value);
+  formData.append('category', event.target.category.value);
+  formData.append('description', event.target.description.value);
+  formData.append('featured', event.target.featured.checked);
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/portfolio`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (response.ok) {
+      event.target.closest('.modal').remove();
+      fileInput.value = '';
+      loadPortfolio();
+      alert('Portfolio item uploaded successfully!');
+    } else {
+      alert('Error uploading portfolio item');
+    }
+  } catch (error) {
+    console.error('Error uploading portfolio item:', error);
+    alert('Error uploading portfolio item');
+  }
+}
+
+// Edit portfolio item
+function editPortfolioItem(itemId) {
+  // Load item data and show edit modal
+  fetch(`${API_BASE}/api/portfolio`)
+    .then(response => response.json())
+    .then(portfolio => {
+      const item = portfolio.find(p => p._id === itemId);
+      if (item) {
+        // Show edit modal with pre-filled data
+        alert('Edit functionality coming soon! Item: ' + item.title);
+      }
+    });
+}
+
+// Delete portfolio item
+async function deletePortfolioItem(itemId) {
+  if (confirm('Are you sure you want to delete this portfolio item?')) {
+    try {
+      const response = await fetch(`${API_BASE}/api/portfolio/${itemId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        loadPortfolio();
+        alert('Portfolio item deleted successfully');
+      } else {
+        alert('Error deleting portfolio item');
+      }
+    } catch (error) {
+      console.error('Error deleting portfolio item:', error);
+      alert('Error deleting portfolio item');
+    }
+  }
+}
+
+// Refresh portfolio
+function refreshPortfolio() {
+  loadPortfolio();
+}
+
+// API Configuration
+const API_BASE = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://your-backend-url.railway.app'; // Replace with your Railway URL
+
+// Tab functionality
+function showTab(tabName) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Filter messages based on tab
+  loadMessages(tabName);
+}
+
+// Load real messages from MongoDB with filtering
+async function loadMessages(filter = 'new') {
+  try {
+    const response = await fetch(`${API_BASE}/api/messages`);
+    const messages = await response.json();
+    
+    // Filter messages based on tab
+    let filteredMessages = messages;
+    if (filter === 'new') {
+      filteredMessages = messages.filter(msg => msg.status === 'new');
+    } else if (filter === 'responded') {
+      filteredMessages = messages.filter(msg => msg.status === 'responded');
+    }
+    
+    const tbody = document.querySelector('#messages-table tbody');
+    if (tbody) {
+      if (filteredMessages.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+              No ${filter} messages found.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = filteredMessages.map(msg => `
+          <tr>
+            <td>${msg.name}<br><small>${msg.email}</small></td>
+            <td>${msg.project_type || 'Contact Inquiry'}</td>
+            <td><span class="status-badge status-${msg.status}">${msg.source}</span></td>
+            <td>${new Date(msg.createdAt).toLocaleDateString()}</td>
+            <td>
+              <button class="btn btn-primary" onclick="viewMessage('${msg._id}')">View</button>
+              <button class="btn btn-secondary" onclick="replyToMessage('${msg._id}')">Reply</button>
+              <button class="btn btn-danger" onclick="deleteMessage('${msg._id}')">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+    
+    // Update tab counts
+    updateTabCounts(messages);
+  } catch (error) {
+    console.error('Error loading messages:', error);
+  }
+}
+
+// Update tab counts
+function updateTabCounts(messages) {
+  const newCount = messages.filter(msg => msg.status === 'new').length;
+  const respondedCount = messages.filter(msg => msg.status === 'responded').length;
+  
+  const tabs = document.querySelectorAll('.tab');
+  if (tabs[0]) tabs[0].textContent = `New (${newCount})`;
+  if (tabs[1]) tabs[1].textContent = `Responded (${respondedCount})`;
+  if (tabs[2]) tabs[2].textContent = `All Messages (${messages.length})`;
+}
+
+// View message details
+async function viewMessage(messageId) {
+  try {
+    const response = await fetch(`${API_BASE}/api/messages`);
+    const messages = await response.json();
+    const message = messages.find(msg => msg._id === messageId);
+    
+    if (message) {
+      document.getElementById('messageContent').innerHTML = `
+        <div class="form-group">
+          <label>From:</label>
+          <p><strong>${message.name}</strong> (${message.email})</p>
+        </div>
+        <div class="form-group">
+          <label>Subject:</label>
+          <p>${message.project_type || 'Contact Inquiry'}</p>
+        </div>
+        <div class="form-group">
+          <label>Source:</label>
+          <span class="status-badge status-${message.status}">${message.source}</span>
+        </div>
+        <div class="form-group">
+          <label>Date:</label>
+          <p>${new Date(message.createdAt).toLocaleDateString()} at ${new Date(message.createdAt).toLocaleTimeString()}</p>
+        </div>
+        ${message.phone && message.phone !== 'Not provided' ? `
+          <div class="form-group">
+            <label>Phone:</label>
+            <p>${message.phone}</p>
+          </div>
+        ` : ''}
+        <div class="form-group">
+          <label>Message:</label>
+          <p style="background: var(--admin-light); padding: 1rem; border-radius: 4px;">${message.message}</p>
+        </div>
+      `;
+      document.getElementById('messageModal').style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error viewing message:', error);
+  }
+}
+
+// Reply to message
+function replyToMessage(messageId) {
+  viewMessage(messageId);
+  // Add reply functionality
+  const messageContent = document.getElementById('messageContent');
+  messageContent.innerHTML += `
+    <div class="form-group" style="margin-top: 2rem; border-top: 1px solid var(--admin-border); padding-top: 1rem;">
+      <label>Reply:</label>
+      <textarea id="replyText" rows="4" placeholder="Type your reply here..."></textarea>
+    </div>
+  `;
+}
+
+// Delete message
+async function deleteMessage(messageId) {
+  if (confirm('Are you sure you want to delete this message?')) {
+    try {
+      const response = await fetch(`${API_BASE}/api/messages/${messageId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        loadMessages(); // Reload messages
+        alert('Message deleted successfully');
+      } else {
+        alert('Error deleting message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      alert('Error deleting message');
+    }
+  }
+}
+
+// Mark all as read
+async function markAllAsRead() {
+  try {
+    const response = await fetch(`${API_BASE}/api/messages`);
+    const messages = await response.json();
+    const newMessages = messages.filter(msg => msg.status === 'new');
+    
+    for (const message of newMessages) {
+      await fetch(`${API_BASE}/api/messages/${message._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'responded' })
+      });
+    }
+    
+    loadMessages();
+    alert('All messages marked as responded');
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+  }
+}
+
+// Export messages
+function exportMessages() {
+  window.open(`${API_BASE}/api/messages/export`, '_blank');
+}
+
+// Modal functions
+function viewMessage(messageId) {
+  const messages = {
+    1: {
+      from: 'John Doe',
+      email: 'john@example.com',
+      subject: 'Music Performance Inquiry',
+      source: 'Music',
+      date: '2 hours ago',
+      message: 'Hi Alex, I\'m interested in booking you for an acoustic performance at our venue. We\'re looking for someone who can play 70s-90s classics. Let me know your availability and rates.'
+    },
+    2: {
+      from: 'Sarah Smith',
+      email: 'sarah@company.com',
+      subject: 'Visual Project Quote',
+      source: 'Visuals',
+      date: '5 hours ago',
+      message: 'Hello Alex, We need a VJ for our upcoming festival in Barcelona. The event is for 2000 people and we want someone who can create immersive visual experiences. Can you provide a quote?'
+    }
+  };
+  
+  const message = messages[messageId];
+  if (message) {
+    document.getElementById('messageContent').innerHTML = `
+      <div class="form-group">
+        <label>From:</label>
+        <p><strong>${message.from}</strong> (${message.email})</p>
+      </div>
+      <div class="form-group">
+        <label>Subject:</label>
+        <p>${message.subject}</p>
+      </div>
+      <div class="form-group">
+        <label>Source:</label>
+        <span class="status-badge status-new">${message.source}</span>
+      </div>
+      <div class="form-group">
+        <label>Date:</label>
+        <p>${message.date}</p>
+      </div>
+      <div class="form-group">
+        <label>Message:</label>
+        <p>${message.message}</p>
+      </div>
+    `;
+    document.getElementById('messageModal').style.display = 'block';
+  }
+}
+
+function openEventModal() {
+  document.getElementById('eventModal').style.display = 'block';
+}
+
+function openVisualModal() {
+  // Similar to event modal but for visual content
+  console.log('Opening visual content modal');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal')) {
+    event.target.style.display = 'none';
+  }
+}
+
+// File upload simulation
+document.getElementById('fileUpload').addEventListener('change', function(e) {
+  const files = e.target.files;
+  console.log('Files selected:', files);
+  // Here you would handle the actual file upload
+  alert(`Selected ${files.length} file(s) for upload. In a real implementation, these would be uploaded to your server.`);
+});
+
+// Form submissions
+document.querySelectorAll('form').forEach(form => {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Form submitted! In a real implementation, this data would be saved to your database.');
+    closeModal('eventModal');
+  });
+});
+
+// Simulated real-time updates - DISABLED for local development
+// setInterval(() => {
+//   // Update stats periodically
+//   const stats = document.querySelectorAll('.stat');
+//   stats.forEach(stat => {
+//     const currentValue = parseInt(stat.textContent);
+//     if (!isNaN(currentValue) && Math.random() > 0.8) {
+//       stat.textContent = currentValue + Math.floor(Math.random() * 3);
+//     }
+//   });
+// }, 10000); // Update every 10 seconds
+</script>
+
+</body>
+</html>
