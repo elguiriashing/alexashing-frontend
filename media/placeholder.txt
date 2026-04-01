@@ -1,2 +1,0 @@
-Media files are hosted externally for better performance.
-Visit https://cloudinary.com or similar services for media hosting.
