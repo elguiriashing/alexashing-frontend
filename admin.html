@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin · Alex Ashing</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1361,13 +1362,21 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 const CFG = {
   password: '!Magnetix1!',
   API_BASE: '', // Set to your backend URL, e.g. 'https://your-api.vercel.app'
-  EMAILJS_PUBLIC_KEY: '',
-  EMAILJS_SERVICE_ID: '',
-  EMAILJS_TEMPLATE_ID: '',
+  EMAILJS_PUBLIC_KEY: 'qcKv2hV_8yaZW-nFK',
+  EMAILJS_SERVICE_ID: 'service_r6dnlsd',
+  EMAILJS_TEMPLATE_ID: 'template_abcdefg',
   EMAILJS_REPLY_TEMPLATE: '',
-  CLOUDINARY_CLOUD: '',
+  CLOUDINARY_CLOUD: 'dd0vj4o6k',
+  CLOUDINARY_API_KEY: '696159786321852',
+  CLOUDINARY_API_SECRET: '-8VKakegs_tmMcaXhtHvwM2niH0',
   CLOUDINARY_PRESET: '',
+  MONGODB_URI: 'mongodb+srv://alexashing1_db_user:wI3MeYa3AWsitwbu@alexashinga01.rrrf1fo.mongodb.net/?appName=AlexAshingA01',
 };
+
+// Initialize EmailJS
+if(window.emailjs && CFG.EMAILJS_PUBLIC_KEY){
+  window.emailjs.init(CFG.EMAILJS_PUBLIC_KEY);
+}
 
 // Load saved settings
 function loadCfg(){
@@ -1381,7 +1390,11 @@ function loadCfg(){
     fill('set-url', CFG.siteUrl);
     fill('mg-api', CFG.API_BASE);
     fill('cl-name', CFG.CLOUDINARY_CLOUD);
+    fill('cl-apikey', CFG.CLOUDINARY_API_KEY);
+    fill('cl-secret', CFG.CLOUDINARY_API_SECRET);
     fill('cl-preset', CFG.CLOUDINARY_PRESET);
+    fill('mg-uri', CFG.MONGODB_URI);
+    fill('ejs-pubkey', CFG.EMAILJS_PUBLIC_KEY);
     fill('ejs-service', CFG.EMAILJS_SERVICE_ID);
     fill('ejs-template', CFG.EMAILJS_TEMPLATE_ID);
     fill('ejs-reply-template', CFG.EMAILJS_REPLY_TEMPLATE);
@@ -2210,9 +2223,10 @@ function showSettingsPanel(id,el){
 function saveSettings(){
   const saved={
     displayName:v('set-name'), adminEmail:v('set-email'), siteUrl:v('set-url'),
-    API_BASE:v('mg-api'), CLOUDINARY_CLOUD:v('cl-name'), CLOUDINARY_PRESET:v('cl-preset'),
-    EMAILJS_SERVICE_ID:v('ejs-service'), EMAILJS_TEMPLATE_ID:v('ejs-template'),
+    API_BASE:v('mg-api'), CLOUDINARY_CLOUD:v('cl-name'), CLOUDINARY_API_KEY:v('cl-apikey'), CLOUDINARY_API_SECRET:v('cl-secret'), CLOUDINARY_PRESET:v('cl-preset'),
+    EMAILJS_PUBLIC_KEY:v('ejs-pubkey'), EMAILJS_SERVICE_ID:v('ejs-service'), EMAILJS_TEMPLATE_ID:v('ejs-template'),
     EMAILJS_REPLY_TEMPLATE:v('ejs-reply-template'),
+    MONGODB_URI:v('mg-uri'),
     autoRefresh:document.getElementById('set-autorefresh')?.checked,
   };
   Object.assign(CFG, saved);
