@@ -253,11 +253,14 @@ nav{
 }
 .steps{
   display:grid;grid-template-columns:repeat(5,1fr);
-  gap:1px;background:var(--border)
+  gap:1px;background:var(--border);
+  max-width:100%;
+  overflow-x:hidden;
 }
 .step{
-  background:var(--dark3);padding:2rem;
+  background:var(--dark3);padding:1.5rem;
   transition:background .3s;
+  min-width:0;
 }
 .step:hover{background:var(--surface)}
 
