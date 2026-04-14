@@ -313,6 +313,8 @@
       function App() {
         const [midiAccess, setMidiAccess] = useState(null);
         const [midiConnected, setMidiConnected] = useState(false);
+        const [midiInputs, setMidiInputs] = useState([]);
+        const [selectedMidiDevice, setSelectedMidiDevice] = useState('');
         const [bridgeConnected, setBridgeConnected] = useState(false);
         const [devices, setDevices] = useState([]);
         const [activePads, setActivePads] = useState([]);
@@ -332,22 +334,32 @@
                 setMidiAccess(access);
                 addLog('MIDI Access granted', 'success');
                 
-                // Listen for MIDI inputs
-                access.inputs.forEach(input => {
-                  input.onmidimessage = handleMIDIMessage;
-                  if (input.name?.includes('Launchpad')) {
-                    setMidiConnected(true);
-                    addLog(`Connected: ${input.name}`, 'success');
-                    
-                    // Enter programmer mode
-                    sendLaunchpadSysEx([0, 32, 41, 2, 13, 14, 1]);
-                  }
-                });
+                // Get all MIDI inputs
+                const inputs = Array.from(access.inputs.values());
+                setMidiInputs(inputs);
+                
+                // Find Launchpad
+                const launchpad = inputs.find(i => 
+                  i.name?.toLowerCase().includes('launchpad')
+                );
+                
+                if (launchpad) {
+                  setSelectedMidiDevice(launchpad.id);
+                  setupMidiDevice(launchpad);
+                } else if (inputs.length > 0) {
+                  // Default to first device if no Launchpad
+                  setSelectedMidiDevice(inputs[0].id);
+                  setupMidiDevice(inputs[0]);
+                }
                 
                 // Watch for device changes
                 access.onstatechange = (e) => {
                   addLog(`MIDI device ${e.port.state}: ${e.port.name}`, 'info');
-                  setMidiConnected(e.port.state === 'connected');
+                  if (e.port.type === 'input') {
+                    const newInputs = Array.from(access.inputs.values());
+                    setMidiInputs(newInputs);
+                    setMidiConnected(e.port.state === 'connected');
+                  }
                 };
               })
               .catch(err => {
@@ -357,6 +369,34 @@
             addLog('Web MIDI API not supported in this browser', 'error');
           }
         }, []);
+        
+        // Setup MIDI device
+        const setupMidiDevice = (input) => {
+          input.onmidimessage = handleMIDIMessage;
+          setMidiConnected(true);
+          addLog(`Connected: ${input.name}`, 'success');
+          
+          if (input.name?.toLowerCase().includes('launchpad')) {
+            // Enter programmer mode for Launchpad
+            sendLaunchpadSysEx([0, 32, 41, 2, 13, 14, 1]);
+          }
+        };
+        
+        // Handle MIDI device selection change
+        const handleMidiDeviceChange = (deviceId) => {
+          setSelectedMidiDevice(deviceId);
+          
+          // Disconnect old inputs
+          midiInputs.forEach(input => {
+            input.onmidimessage = null;
+          });
+          
+          // Connect new device
+          const device = midiInputs.find(i => i.id === deviceId);
+          if (device) {
+            setupMidiDevice(device);
+          }
+        };
         
         // Send SysEx to Launchpad
         const sendLaunchpadSysEx = useCallback((data) => {
@@ -498,9 +538,31 @@
             <header style={styles.header}>
               <div style={styles.title}>JARVIS</div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {/* MIDI Device Selector */}
+                {midiInputs.length > 0 && (
+                  <select 
+                    value={selectedMidiDevice}
+                    onChange={(e) => handleMidiDeviceChange(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      background: 'var(--bg-panel)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: 'var(--text)',
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {midiInputs.map(input => (
+                      <option key={input.id} value={input.id}>
+                        🎹 {input.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <StatusIndicator 
                   connected={midiConnected} 
-                  label="Launchpad" 
+                  label="MIDI" 
                 />
                 <StatusIndicator 
                   connected={bridgeConnected} 
