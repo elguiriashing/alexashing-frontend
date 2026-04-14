@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/jarvis/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JARVIS | Home Control</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+      
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #root { height: 100%; }
+      
+      :root {
+        --bg: #0a0a0f;
+        --bg-panel: #12121a;
+        --bg-card: #1a1a24;
+        --bg-hover: #252532;
+        --text: #e8e8f0;
+        --text-mid: #a0a0b0;
+        --text-dim: #606070;
+        --accent: #00d4ff;
+        --accent-dim: #0088aa;
+        --success: #00ff88;
+        --warning: #ffaa00;
+        --danger: #ff4444;
+        --border: #2a2a3a;
+      }
+      
+      body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+      
+      .grid-bg {
+        position: fixed;
+        inset: 0;
+        background-image: 
+          linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        pointer-events: none;
+        z-index: 0;
+      }
+      
+      .glow {
+        position: fixed;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      
+      .glow-1 { top: -200px; left: -200px; }
+      .glow-2 { bottom: -200px; right: -200px; background: radial-gradient(circle, rgba(0,255,136,0.1) 0%, transparent 70%); }
+    </style>
+  </head>
+  <body>
+    <div class="grid-bg"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useCallback } = React;
+      
+      // ============ CONFIGURATION ============
+      const CONFIG = {
+        // Update this with your Cloudflare Tunnel or ngrok URL
+        // When tunnel is running, e.g.: "https://your-tunnel.trycloudflare.com"
+        BRIDGE_URL: localStorage.getItem('jarvis_bridge_url') || '',
+        MIDI_DEVICE_NAME: 'Launchpad Mini MK3'
+      };
+      
+      // ============ STYLES ============
+      const styles = {
+        container: {
+          position: 'relative',
+          zIndex: 1,
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px',
+          gap: '16px'
+        },
+        header: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 24px',
+          background: 'rgba(18,18,26,0.8)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          border: '1px solid var(--border)'
+        },
+        title: {
+          fontSize: '24px',
+          fontWeight: 700,
+          background: 'linear-gradient(135deg, #00d4ff, #00ff88)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          letterSpacing: '4px'
+        },
+        statusBadge: (connected) => ({
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: connected ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,68,0.1)',
+          border: `1px solid ${connected ? 'var(--success)' : 'var(--danger)'}`,
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: 600,
+          color: connected ? 'var(--success)' : 'var(--danger)'
+        }),
+        main: {
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: '16px',
+          overflow: 'auto'
+        },
+        card: {
+          background: 'rgba(26,26,36,0.8)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px'
+        },
+        cardTitle: {
+          fontSize: '14px',
+          fontWeight: 600,
+          color: 'var(--text-mid)',
+          textTransform: 'uppercase',
+          letterSpacing: '2px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        },
+        deviceGrid: {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px'
+        },
+        deviceCard: (isOn) => ({
+          padding: '16px',
+          background: isOn ? 'rgba(0,212,255,0.15)' : 'var(--bg-panel)',
+          border: `2px solid ${isOn ? 'var(--accent)' : 'var(--border)'}`,
+          borderRadius: '12px',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }),
+        deviceIcon: {
+          fontSize: '24px',
+          color: 'var(--accent)'
+        },
+        deviceName: {
+          fontSize: '13px',
+          fontWeight: 500,
+          color: 'var(--text)'
+        },
+        deviceStatus: (isOn) => ({
+          fontSize: '11px',
+          color: isOn ? 'var(--success)' : 'var(--text-dim)'
+        }),
+        midiPad: {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(8, 1fr)',
+          gap: '4px',
+          aspectRatio: '1',
+          maxWidth: '400px',
+          margin: '0 auto'
+        },
+        pad: (isActive, color) => ({
+          aspectRatio: '1',
+          borderRadius: '4px',
+          border: 'none',
+          cursor: 'pointer',
+          background: isActive ? (color || 'var(--accent)') : 'var(--bg-panel)',
+          boxShadow: isActive ? `0 0 10px ${color || 'var(--accent)'}` : 'none',
+          transition: 'all 0.1s'
+        }),
+        log: {
+          flex: 1,
+          background: 'var(--bg-panel)',
+          borderRadius: '8px',
+          padding: '12px',
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '11px',
+          overflow: 'auto',
+          maxHeight: '200px'
+        },
+        logEntry: (type) => ({
+          color: type === 'error' ? 'var(--danger)' : 
+                 type === 'success' ? 'var(--success)' : 
+                 type === 'midi' ? 'var(--accent)' : 'var(--text-mid)',
+          marginBottom: '4px'
+        }),
+        button: {
+          padding: '12px 24px',
+          background: 'var(--accent)',
+          color: 'var(--bg)',
+          border: 'none',
+          borderRadius: '8px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        },
+        input: {
+          padding: '10px 16px',
+          background: 'var(--bg-panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          color: 'var(--text)',
+          fontSize: '13px',
+          width: '100%'
+        }
+      };
+      
+      // ============ COMPONENTS ============
+      
+      function StatusIndicator({ connected, label }) {
+        return (
+          <div style={styles.statusBadge(connected)}>
+            <i className={`fas fa-circle ${connected ? 'fa-beat' : ''}`} style={{ fontSize: '8px' }}></i>
+            {label}: {connected ? 'Connected' : 'Disconnected'}
+          </div>
+        );
+      }
+      
+      function DeviceCard({ device, onToggle }) {
+        return (
+          <div 
+            style={styles.deviceCard(device.isOn)}
+            onClick={() => onToggle(device.id)}
+          >
+            <i className={`fas fa-${device.icon || 'lightbulb'}`} style={styles.deviceIcon}></i>
+            <span style={styles.deviceName}>{device.name}</span>
+            <span style={styles.deviceStatus(device.isOn)}>
+              {device.isOn ? 'ON' : 'OFF'}
+            </span>
+          </div>
+        );
+      }
+      
+      function MIDIPad({ activePads, onPadPress }) {
+        return (
+          <div style={styles.midiPad}>
+            {Array.from({ length: 64 }, (_, i) => {
+              const row = Math.floor(i / 8);
+              const col = i % 8;
+              const padIndex = (7 - row) * 8 + col; // Launchpad layout
+              const isActive = activePads.includes(padIndex);
+              
+              // Color mapping for different pad functions
+              let color = null;
+              if (isActive) {
+                if (padIndex < 8) color = '#ff4444'; // Bottom row - red
+                else if (padIndex >= 56) color = '#00ff88'; // Top row - green
+                else if (padIndex % 8 === 0) color = '#ffaa00'; // Left column - orange
+                else color = 'var(--accent)';
+              }
+              
+              return (
+                <button
+                  key={i}
+                  style={styles.pad(isActive, color)}
+                  onMouseDown={() => onPadPress(padIndex, true)}
+                  onMouseUp={() => onPadPress(padIndex, false)}
+                  onMouseLeave={() => onPadPress(padIndex, false)}
+                />
+              );
+            })}
+          </div>
+        );
+      }
+      
+      function LogPanel({ logs }) {
+        const logEndRef = useRef(null);
+        
+        useEffect(() => {
+          logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, [logs]);
+        
+        return (
+          <div style={styles.log}>
+            {logs.map((log, i) => (
+              <div key={i} style={styles.logEntry(log.type)}>
+                [{new Date(log.time).toLocaleTimeString()}] {log.message}
+              </div>
+            ))}
+            <div ref={logEndRef} />
+          </div>
+        );
+      }
+      
+      // ============ MAIN APP ============
+      
+      function App() {
+        const [midiAccess, setMidiAccess] = useState(null);
+        const [midiConnected, setMidiConnected] = useState(false);
+        const [bridgeConnected, setBridgeConnected] = useState(false);
+        const [devices, setDevices] = useState([]);
+        const [activePads, setActivePads] = useState([]);
+        const [logs, setLogs] = useState([]);
+        const [bridgeUrl, setBridgeUrl] = useState(CONFIG.BRIDGE_URL);
+        const [showConfig, setShowConfig] = useState(false);
+        
+        const addLog = useCallback((message, type = 'info') => {
+          setLogs(prev => [...prev.slice(-50), { message, type, time: Date.now() }]);
+        }, []);
+        
+        // Initialize MIDI
+        useEffect(() => {
+          if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess({ sysex: true })
+              .then(access => {
+                setMidiAccess(access);
+                addLog('MIDI Access granted', 'success');
+                
+                // Listen for MIDI inputs
+                access.inputs.forEach(input => {
+                  input.onmidimessage = handleMIDIMessage;
+                  if (input.name?.includes('Launchpad')) {
+                    setMidiConnected(true);
+                    addLog(`Connected: ${input.name}`, 'success');
+                    
+                    // Enter programmer mode
+                    sendLaunchpadSysEx([0, 32, 41, 2, 13, 14, 1]);
+                  }
+                });
+                
+                // Watch for device changes
+                access.onstatechange = (e) => {
+                  addLog(`MIDI device ${e.port.state}: ${e.port.name}`, 'info');
+                  setMidiConnected(e.port.state === 'connected');
+                };
+              })
+              .catch(err => {
+                addLog('MIDI Access denied: ' + err.message, 'error');
+              });
+          } else {
+            addLog('Web MIDI API not supported in this browser', 'error');
+          }
+        }, []);
+        
+        // Send SysEx to Launchpad
+        const sendLaunchpadSysEx = useCallback((data) => {
+          if (!midiAccess) return;
+          
+          const output = Array.from(midiAccess.outputs.values())
+            .find(out => out.name?.includes('Launchpad'));
+          
+          if (output) {
+            output.send([0xF0, ...data, 0xF7]);
+          }
+        }, [midiAccess]);
+        
+        // Handle incoming MIDI messages
+        const handleMIDIMessage = useCallback((event) => {
+          const [status, note, velocity] = event.data;
+          const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
+          const isNoteOff = (status & 0xF0) === 0x80 || ((status & 0xF0) === 0x90 && velocity === 0);
+          
+          if (isNoteOn) {
+            addLog(`MIDI Note On: ${note} (velocity: ${velocity})`, 'midi');
+            setActivePads(prev => [...prev, note]);
+            
+            // Map MIDI notes to device control
+            const deviceIndex = note % 8;
+            if (devices[deviceIndex]) {
+              controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+            }
+            
+            // Light up the pad
+            lightUpPad(note, velocity);
+          } else if (isNoteOff) {
+            setActivePads(prev => prev.filter(p => p !== note));
+          }
+        }, [devices]);
+        
+        // Light up Launchpad LED
+        const lightUpPad = useCallback((note, velocity = 127) => {
+          const output = Array.from(midiAccess?.outputs.values() || [])
+            .find(out => out.name?.includes('Launchpad'));
+          
+          if (output) {
+            // Novation Launchpad LED message format
+            // 0x90 = note on, note number, color/velocity
+            const color = velocity > 0 ? 0x3F : 0x00; // Bright cyan or off
+            output.send([0x90, note, color]);
+          }
+        }, [midiAccess]);
+        
+        // Control device via bridge
+        const controlDevice = useCallback(async (deviceId, turnOn) => {
+          if (!bridgeUrl) {
+            addLog('Bridge URL not configured', 'error');
+            return;
+          }
+          
+          try {
+            const response = await fetch(`${bridgeUrl}/api/device/${deviceId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ state: turnOn })
+            });
+            
+            if (response.ok) {
+              addLog(`Device ${deviceId} turned ${turnOn ? 'ON' : 'OFF'}`, 'success');
+              // Update local state
+              setDevices(prev => prev.map(d => 
+                d.id === deviceId ? { ...d, isOn: turnOn } : d
+              ));
+            } else {
+              addLog(`Failed to control device ${deviceId}`, 'error');
+            }
+          } catch (err) {
+            addLog(`Bridge error: ${err.message}`, 'error');
+            setBridgeConnected(false);
+          }
+        }, [bridgeUrl]);
+        
+        // Scan for devices
+        const scanDevices = useCallback(async () => {
+          if (!bridgeUrl) {
+            addLog('Bridge URL not configured', 'error');
+            return;
+          }
+          
+          addLog('Scanning for devices...', 'info');
+          
+          try {
+            const response = await fetch(`${bridgeUrl}/api/devices`);
+            if (response.ok) {
+              const data = await response.json();
+              setDevices(data.devices || []);
+              setBridgeConnected(true);
+              addLog(`Found ${data.devices?.length || 0} devices`, 'success');
+            } else {
+              addLog('Failed to scan devices', 'error');
+              setBridgeConnected(false);
+            }
+          } catch (err) {
+            addLog(`Bridge connection failed: ${err.message}`, 'error');
+            setBridgeConnected(false);
+          }
+        }, [bridgeUrl]);
+        
+        // Auto-scan when bridge URL is set
+        useEffect(() => {
+          if (bridgeUrl) {
+            scanDevices();
+            const interval = setInterval(scanDevices, 30000); // Refresh every 30s
+            return () => clearInterval(interval);
+          }
+        }, [bridgeUrl, scanDevices]);
+        
+        // Save bridge URL
+        const saveBridgeUrl = () => {
+          localStorage.setItem('jarvis_bridge_url', bridgeUrl);
+          CONFIG.BRIDGE_URL = bridgeUrl;
+          addLog('Bridge URL saved', 'success');
+          scanDevices();
+        };
+        
+        // Simulate MIDI pad press
+        const handlePadPress = (index, isPressed) => {
+          if (isPressed) {
+            addLog(`Virtual pad pressed: ${index}`, 'midi');
+            setActivePads(prev => [...prev, index]);
+            const deviceIndex = index % 8;
+            if (devices[deviceIndex]) {
+              controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+            }
+          } else {
+            setActivePads(prev => prev.filter(p => p !== index));
+          }
+        };
+        
+        return (
+          <div style={styles.container}>
+            {/* Header */}
+            <header style={styles.header}>
+              <div style={styles.title}>JARVIS</div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <StatusIndicator 
+                  connected={midiConnected} 
+                  label="Launchpad" 
+                />
+                <StatusIndicator 
+                  connected={bridgeConnected} 
+                  label="Bridge" 
+                />
+                <button
+                  style={{...styles.button, padding: '8px 16px'}}
+                  onClick={() => setShowConfig(!showConfig)}
+                >
+                  <i className="fas fa-cog"></i>
+                </button>
+              </div>
+            </header>
+            
+            {/* Configuration Panel */}
+            {showConfig && (
+              <div style={styles.card}>
+                <div style={styles.cardTitle}>
+                  <i className="fas fa-network-wired"></i>
+                  Bridge Configuration
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="https://your-tunnel.trycloudflare.com"
+                    value={bridgeUrl}
+                    onChange={(e) => setBridgeUrl(e.target.value)}
+                    style={styles.input}
+                  />
+                  <button style={styles.button} onClick={saveBridgeUrl}>
+                    Save
+                  </button>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
+                  Enter your Cloudflare Tunnel or ngrok URL here. Run <code>cloudflared tunnel --url http://localhost:5000</code> on your PC.
+                </p>
+              </div>
+            )}
+            
+            {/* Main Grid */}
+            <main style={styles.main}>
+              {/* Devices Panel */}
+              <div style={styles.card}>
+                <div style={styles.cardTitle}>
+                  <i className="fas fa-home"></i>
+                  Smart Devices
+                  <button 
+                    style={{...styles.button, padding: '6px 12px', fontSize: '11px', marginLeft: 'auto'}}
+                    onClick={scanDevices}
+                  >
+                    <i className="fas fa-sync"></i> Scan
+                  </button>
+                </div>
+                <div style={styles.deviceGrid}>
+                  {devices.length === 0 ? (
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-dim)', padding: '40px' }}>
+                      {bridgeUrl ? 'No devices found. Click Scan to search.' : 'Configure bridge URL to connect to devices.'}
+                    </div>
+                  ) : (
+                    devices.map(device => (
+                      <DeviceCard 
+                        key={device.id} 
+                        device={device} 
+                        onToggle={(id) => controlDevice(id, !device.isOn)}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+              
+              {/* MIDI Visualizer */}
+              <div style={styles.card}>
+                <div style={styles.cardTitle}>
+                  <i className="fas fa-th"></i>
+                  Launchpad Visualizer
+                </div>
+                <MIDIPad activePads={activePads} onPadPress={handlePadPress} />
+                <p style={{ fontSize: '11px', color: 'var(--text-dim)', textAlign: 'center' }}>
+                  Click pads or use your physical Launchpad Mini MK3
+                </p>
+              </div>
+              
+              {/* Activity Log */}
+              <div style={{ ...styles.card, gridColumn: '1 / -1' }}>
+                <div style={styles.cardTitle}>
+                  <i className="fas fa-terminal"></i>
+                  Activity Log
+                </div>
+                <LogPanel logs={logs} />
+              </div>
+            </main>
+          </div>
+        );
+      }
+      
+      // Render
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
