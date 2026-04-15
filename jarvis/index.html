@@ -257,34 +257,197 @@
         );
       }
       
-      function MIDIPad({ activePads, onPadPress }) {
+      // Device fader component for left side
+      function FaderColumn({ colIndex, activePads, onPadPress, deviceName }) {
         return (
-          <div style={styles.midiPad}>
-            {Array.from({ length: 64 }, (_, i) => {
-              const row = Math.floor(i / 8);
-              const col = i % 8;
-              const padIndex = (7 - row) * 8 + col; // Launchpad layout
-              const isActive = activePads.includes(padIndex);
-              
-              // Color mapping for different pad functions
-              let color = null;
-              if (isActive) {
-                if (padIndex < 8) color = '#ff4444'; // Bottom row - red
-                else if (padIndex >= 56) color = '#00ff88'; // Top row - green
-                else if (padIndex % 8 === 0) color = '#ffaa00'; // Left column - orange
-                else color = 'var(--accent)';
-              }
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {Array.from({ length: 8 }, (_, row) => {
+              // Launchpad note index: (7-row) * 8 + col
+              const note = (7 - row) * 8 + colIndex;
+              const isActive = activePads.includes(note);
+              // CC for this fader position
+              const cc = colIndex * 8 + row;
               
               return (
                 <button
-                  key={i}
-                  style={styles.pad(isActive, color)}
-                  onMouseDown={() => onPadPress(padIndex, true)}
-                  onMouseUp={() => onPadPress(padIndex, false)}
-                  onMouseLeave={() => onPadPress(padIndex, false)}
+                  key={row}
+                  style={{
+                    ...styles.pad(isActive, isActive ? '#00d4ff' : null),
+                    width: '40px',
+                    height: '40px'
+                  }}
+                  onMouseDown={() => onPadPress(note, true, 'cc', cc)}
+                  onMouseUp={() => onPadPress(note, false)}
+                  onMouseLeave={() => onPadPress(note, false)}
+                  title={`${deviceName} - CC ${cc}`}
                 />
               );
             })}
+          </div>
+        );
+      }
+      
+      // Color button component
+      function ColorButton({ note, color, isActive, onPress, colorName }) {
+        const colorMap = {
+          'red': '#ff4444',
+          'orange': '#ff8800',
+          'yellow': '#ffdd00',
+          'light_green': '#88ff00',
+          'dark_green': '#00aa44',
+          'light_blue': '#00ddff',
+          'dark_blue': '#0044aa',
+          'pink': '#ff44aa',
+          'white': '#ffffff'
+        };
+        
+        return (
+          <button
+            style={{
+              ...styles.pad(isActive, colorMap[color] || color),
+              width: '40px',
+              height: '40px'
+            }}
+            onMouseDown={() => onPress(note, true, 'note')}
+            onMouseUp={() => onPress(note, false)}
+            onMouseLeave={() => onPress(note, false)}
+            title={colorName}
+          />
+        );
+      }
+      
+      // App launcher button
+      function AppButton({ note, isActive, onPress, appName }) {
+        return (
+          <button
+            style={{
+              ...styles.pad(isActive, isActive ? '#00ff88' : '#2a2a3a'),
+              width: '40px',
+              height: '40px',
+              fontSize: '10px',
+              color: isActive ? '#000' : '#fff'
+            }}
+            onMouseDown={() => onPress(note, true, 'note')}
+            onMouseUp={() => onPress(note, false)}
+            onMouseLeave={() => onPress(note, false)}
+            title={appName}
+          >
+            {appName?.substring(0, 2)}
+          </button>
+        );
+      }
+      
+      // Main Launchpad layout matching midicontrol
+      function MIDIPad({ activePads, onPadPress }) {
+        // Color layout for right side (9 colors in 5 rows x 4 cols, but we show 5)
+        const colors = [
+          ['red', 'red', 'red', 'red'],
+          ['orange', 'orange', 'orange', 'orange'],
+          ['yellow', 'yellow', 'yellow', 'yellow'],
+          ['light_green', 'light_green', 'light_green', 'light_green'],
+          ['dark_green', 'dark_green', 'dark_green', 'dark_green']
+        ];
+        
+        // App names for bottom row
+        const apps = ['Discord', 'Firefox', 'Steam', 'OBS', 'Spotify', 'VS Code', 'Terminal', 'File'];
+        
+        return (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            {/* LEFT HALF - 4 Faders */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <FaderColumn colIndex={0} activePads={activePads} onPadPress={onPadPress} deviceName="Light 1" />
+              <FaderColumn colIndex={1} activePads={activePads} onPadPress={onPadPress} deviceName="Light 2" />
+              <FaderColumn colIndex={2} activePads={activePads} onPadPress={onPadPress} deviceName="Strip 1" />
+              <FaderColumn colIndex={3} activePads={activePads} onPadPress={onPadPress} deviceName="Strip 2" />
+            </div>
+            
+            {/* Divider */}
+            <div style={{ width: '2px', background: 'var(--border)', margin: '0 8px' }} />
+            
+            {/* RIGHT HALF - Colors + Controls + Apps */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {/* Rows 0-4: Color buttons (9 colors mapped to 5 rows) */}
+              {colors.map((rowColors, row) => (
+                <div key={row} style={{ display: 'flex', gap: '4px' }}>
+                  {rowColors.map((color, col) => {
+                    const colIndex = 4 + col;
+                    const note = (7 - row) * 8 + colIndex;
+                    return (
+                      <ColorButton
+                        key={col}
+                        note={note}
+                        color={color}
+                        isActive={activePads.includes(note)}
+                        onPress={onPadPress}
+                        colorName={color}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+              
+              {/* Row 5: Master brightness (4) + gap + Volume (2) */}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {/* Master brightness - columns 0-3 */}
+                {[0, 1, 2, 3].map(col => {
+                  const note = 2 * 8 + col; // Row 5
+                  return (
+                    <button
+                      key={col}
+                      style={{
+                        ...styles.pad(activePads.includes(note), '#ffaa00'),
+                        width: '40px',
+                        height: '40px'
+                      }}
+                      onMouseDown={() => onPadPress(note, true, 'cc', col)}
+                      onMouseUp={() => onPadPress(note, false)}
+                      title={`Master ${col + 1}`}
+                    />
+                  );
+                })}
+                {/* Gap */}
+                <div style={{ width: '44px' }} />
+                {/* Volume down/up */}
+                {[6, 7].map((col, i) => {
+                  const note = 2 * 8 + col;
+                  return (
+                    <button
+                      key={col}
+                      style={{
+                        ...styles.pad(activePads.includes(note), i === 0 ? '#ff4444' : '#00ff88'),
+                        width: '40px',
+                        height: '40px',
+                        fontSize: '12px'
+                      }}
+                      onMouseDown={() => onPadPress(note, true, 'cc', i === 0 ? 102 : 103)}
+                      onMouseUp={() => onPadPress(note, false)}
+                      title={i === 0 ? 'Vol -' : 'Vol +'}
+                    >
+                      {i === 0 ? '-' : '+'}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Rows 6-7: App launchers */}
+              {[1, 0].map(row => (
+                <div key={row} style={{ display: 'flex', gap: '4px' }}>
+                  {[4, 5, 6, 7].map((col, i) => {
+                    const note = row * 8 + col;
+                    const appIndex = (1 - row) * 4 + (col - 4);
+                    return (
+                      <AppButton
+                        key={col}
+                        note={note}
+                        isActive={activePads.includes(note)}
+                        onPress={onPadPress}
+                        appName={apps[appIndex]}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         );
       }
@@ -410,26 +573,76 @@
           }
         }, [midiAccess]);
         
-        // Handle incoming MIDI messages
+        // Handle incoming MIDI messages matching layout_mapper.py
         const handleMIDIMessage = useCallback((event) => {
-          const [status, note, velocity] = event.data;
-          const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
-          const isNoteOff = (status & 0xF0) === 0x80 || ((status & 0xF0) === 0x90 && velocity === 0);
+          const [status, data1, data2] = event.data;
+          const messageType = status & 0xF0;
+          const channel = (status & 0x0F) + 1; // Convert to 1-based channel (1-16)
           
-          if (isNoteOn) {
-            addLog(`MIDI Note On: ${note} (velocity: ${velocity})`, 'midi');
-            setActivePads(prev => [...prev, note]);
+          // CC messages (faders and colors from layout_mapper.py)
+          if (messageType === 0xB0) { // Control Change
+            const cc = data1;
+            const value = data2;
             
-            // Map MIDI notes to device control
-            const deviceIndex = note % 8;
-            if (devices[deviceIndex]) {
-              controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+            addLog(`CC ${channel}:${cc} = ${value}`, 'midi');
+            
+            // Channel 1: Left half brightness faders (cols 0-3)
+            // Layout: 8 rows per column, so CC mapping is:
+            // Col 0: CC 1-8, Col 1: CC 9-16, Col 2: CC 17-24, Col 3: CC 25-32
+            if (channel === 1 && cc >= 1 && cc <= 32) {
+              const col = Math.floor((cc - 1) / 8); // 0-3
+              const row = (cc - 1) % 8; // 0-7 (top to bottom)
+              const deviceIndex = col; // 0-3 = light1, light2, strip1, strip2
+              const device = devices[deviceIndex];
+              
+              if (device) {
+                const brightness = Math.round((value / 127) * 100);
+                addLog(`${device.name} brightness: ${brightness}%`, 'info');
+                // Could send brightness control to bridge here
+              }
             }
+            // Channel 2: Right half colors (cols 4-7)
+            // Layout: CC 1-20 for colors (rows 0-4, 2 buttons per device per color)
+            else if (channel === 2 && cc >= 1 && cc <= 20) {
+              const colorIndex = Math.floor((cc - 1) / 4); // 0-4 = red, orange, yellow, light_green, dark_green
+              const deviceInPair = (cc - 1) % 2; // 0 or 1 within the pair
+              const colGroup = Math.floor(((cc - 1) % 4) / 2); // 0 = cols 4-5 (light1, light2), 1 = cols 6-7 (strip1, strip2)
+              
+              const colors = ['red', 'orange', 'yellow', 'light_green', 'dark_green'];
+              const colorName = colors[colorIndex] || 'unknown';
+              
+              addLog(`Color: ${colorName} (Ch${channel}:CC${cc})`, 'info');
+            }
+            // Volume and master brightness (CC 21-24)
+            else if (channel === 1 && cc >= 21 && cc <= 24) {
+              if (cc === 21) addLog('Volume Down', 'midi');
+              else if (cc === 22) addLog('Volume Up', 'midi');
+              else if (cc === 23 || cc === 24) addLog(`Master Brightness ${cc - 22}`, 'midi');
+            }
+          }
+          // Note messages (bottom row device toggles)
+          else if (messageType === 0x90) { // Note On
+            const note = data1;
+            const velocity = data2;
             
-            // Light up the pad
-            lightUpPad(note, velocity);
-          } else if (isNoteOff) {
-            setActivePads(prev => prev.filter(p => p !== note));
+            if (velocity > 0) {
+              addLog(`Note: ${note} (Ch${channel})`, 'midi');
+              setActivePads(prev => [...prev, note]);
+              
+              // Bottom row (notes 0-7) = device toggles
+              if (note >= 0 && note <= 3) {
+                const deviceIndex = note;
+                if (devices[deviceIndex]) {
+                  controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+                }
+              }
+              
+              lightUpPad(note, velocity);
+            } else {
+              setActivePads(prev => prev.filter(p => p !== note));
+            }
+          } else if (messageType === 0x80) { // Note Off
+            setActivePads(prev => prev.filter(p => p !== data1));
           }
         }, [devices]);
         
@@ -518,17 +731,68 @@
           scanDevices();
         };
         
-        // Simulate MIDI pad press
-        const handlePadPress = (index, isPressed) => {
-          if (isPressed) {
-            addLog(`Virtual pad pressed: ${index}`, 'midi');
-            setActivePads(prev => [...prev, index]);
-            const deviceIndex = index % 8;
-            if (devices[deviceIndex]) {
-              controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+        // Handle virtual pad press (from UI) - sends channel:CC matching layout_mapper.py
+        const sendVirtualCC = (channel, cc, value = 127) => {
+          addLog(`Virtual: Ch${channel}:CC${cc} = ${value}`, 'midi');
+          
+          // Channel 1 CC 1-32: Brightness faders
+          if (channel === 1 && cc >= 1 && cc <= 32) {
+            const col = Math.floor((cc - 1) / 8);
+            const device = devices[col];
+            if (device) {
+              const brightness = Math.round((value / 127) * 100);
+              addLog(`${device.name} brightness: ${brightness}%`, 'info');
             }
+          }
+          // Channel 2 CC 1-20: Colors
+          else if (channel === 2 && cc >= 1 && cc <= 20) {
+            const colorIndex = Math.floor((cc - 1) / 4);
+            const colors = ['red', 'orange', 'yellow', 'light_green', 'dark_green'];
+            addLog(`Color: ${colors[colorIndex] || 'unknown'}`, 'info');
+          }
+          // Volume/Master
+          else if (channel === 1 && cc === 102) addLog('Volume Down', 'midi');
+          else if (channel === 1 && cc === 103) addLog('Volume Up', 'midi');
+        };
+        
+        // Handle virtual pad press
+        const handlePadPress = (note, isPressed, messageType = 'note', extraData = null) => {
+          if (isPressed) {
+            addLog(`Virtual pad: note ${note}`, 'midi');
+            setActivePads(prev => [...prev, note]);
+            
+            // Check column
+            const col = note % 8;
+            const row = Math.floor(note / 8);
+            
+            // Left half (cols 0-3) - bottom row is device toggle
+            if (col < 4 && row === 0) {
+              const deviceIndex = col;
+              if (devices[deviceIndex]) {
+                controlDevice(devices[deviceIndex].id, !devices[deviceIndex].isOn);
+              }
+            }
+            // Left half - faders use CC on channel 1
+            else if (col < 4 && row > 0) {
+              // CC = col*8 + row (inverted for bottom-up)
+              const cc = col * 8 + (7 - row);
+              sendVirtualCC(1, cc + 1);
+            }
+            // Right half - colors use CC on channel 2
+            else if (col >= 4 && row >= 3) { // Top 5 rows are colors
+              const rightCol = col - 4; // 0-3
+              const colorRow = 7 - row; // 0-4
+              const cc = colorRow * 4 + rightCol + 1;
+              sendVirtualCC(2, cc);
+            }
+            // Volume buttons (row 2, cols 6-7)
+            else if (row === 2 && col === 6) sendVirtualCC(1, 102);
+            else if (row === 2 && col === 7) sendVirtualCC(1, 103);
+            
+            // Light up the physical pad if Launchpad connected
+            lightUpPad(note, 127);
           } else {
-            setActivePads(prev => prev.filter(p => p !== index));
+            setActivePads(prev => prev.filter(p => p !== note));
           }
         };
         
