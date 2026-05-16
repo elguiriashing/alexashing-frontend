@@ -1,0 +1,6 @@
+# Frontend gitignore for Cloudflare Pages
+node_modules/
+package-lock.json
+.env*
+.DS_Store
+*.log

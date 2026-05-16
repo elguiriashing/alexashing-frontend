@@ -1,0 +1,12 @@
+{
+  "name": "alexashing-portfolio-frontend",
+  "version": "1.0.0",
+  "description": "Alex Ashing Portfolio Frontend",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": ["portfolio", "frontend", "static"],
+  "author": "Alex Ashing",
+  "license": "MIT"
+}

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASHING | Admin CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-box">
+      <h2>Admin Login</h2>
+      <p>Enter password to access the CRM</p>
+      <form id="login-form">
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit">Access System</button>
+      </form>
+      <div id="login-error" class="hidden">Invalid password</div>
+    </div>
+  </div>
+
+  <div class="dashboard hidden" id="dashboard-app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">ASHING <span>CRM</span></div>
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-target="dashboard">Dashboard</button>
+        <button class="nav-btn" data-target="messages">Messages / Inbound</button>
+        <button class="nav-btn" data-target="leads">Leads Database</button>
+        <button class="nav-btn" data-target="outreach">Find & Scrape Leads</button>
+        <button class="nav-btn" data-target="email">Direct Mail</button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="nav-btn" style="margin-bottom: 10px; color: #ff3366;">Logout</button>
+        <a href="index.html" class="back-link">← Back to Site</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- Dashboard View -->
+      <section id="dashboard" class="view active">
+        <header>
+          <h1>Overview</h1>
+        </header>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Messages</h3>
+            <p id="total-messages-count">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Pending Messages</h3>
+            <p id="pending-messages-count">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Leads</h3>
+            <p id="total-leads-count">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Total Events</h3>
+            <p id="total-events-count">0</p>
+          </div>
+        </div>
+        
+        <div class="charts-grid">
+          <div class="charts-container">
+            <h3>Messages Over Time</h3>
+            <div class="chart-wrapper">
+              <canvas id="messagesChart"></canvas>
+            </div>
+          </div>
+          <div class="charts-container">
+            <h3>Event Statuses</h3>
+            <div class="chart-wrapper">
+              <canvas id="eventsChart"></canvas>
+            </div>
+          </div>
+          <div class="charts-container" style="grid-column: span 2;">
+            <h3>Portfolio Categories</h3>
+            <div class="chart-wrapper">
+              <canvas id="portfolioChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Messages / Inbound View -->
+      <section id="messages" class="view">
+        <header>
+          <h1>Inbound Messages</h1>
+          <p class="subtitle">Contact form submissions from your website.</p>
+        </header>
+        <div class="table-container">
+          <table id="messages-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Project Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Data populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Leads CRM View -->
+      <section id="leads" class="view">
+        <header>
+          <h1>Leads Database</h1>
+          <p class="subtitle">Your saved contacts and outreach targets.</p>
+        </header>
+        
+        <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
+          <label style="color: var(--text-muted); font-size: 0.9rem;">Filter Status:</label>
+          <select id="lead-filter" onchange="filterLeads(this.value)" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; border-radius: 4px;">
+            <option value="all">All</option>
+            <option value="scraped">Uncontacted (Scraped)</option>
+            <option value="contacted">Contacted</option>
+            <option value="client">Client</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        <div class="table-container">
+          <table id="leads-table">
+            <thead>
+              <tr>
+                <th>Business Name</th>
+                <th>Location</th>
+                <th>Website</th>
+                <th>Emails</th>
+                <th>Phones</th>
+                <th>Socials</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Data populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Email View -->
+      <section id="email" class="view">
+        <header>
+          <h1>Direct Mail</h1>
+          <p class="subtitle">Send emails to clients directly from the CRM.</p>
+        </header>
+        <div class="outreach-form-container" style="max-width: 600px;">
+          <form id="email-form">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label>Select Contact from CRM (Optional):</label>
+              <select id="email-contact-select" onchange="if(this.value) document.getElementById('email-to').value = this.value" style="padding: 0.5rem; width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; border-radius: 4px;">
+                <option value="">-- Choose a contact --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>To:</label>
+              <input type="email" id="email-to" placeholder="client@example.com" required>
+            </div>
+            <div class="form-group">
+              <label>Subject:</label>
+              <input type="text" id="email-subject" placeholder="Project Update" required>
+            </div>
+            <div class="form-group">
+              <label>Message:</label>
+              <textarea id="email-body" rows="6" placeholder="Write your message..." required></textarea>
+            </div>
+            <button type="submit" id="email-btn" class="action-btn primary">Send Email</button>
+            <div id="email-status" style="margin-top: 10px;"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Outreach View -->
+      <section id="outreach" class="view">
+        <header>
+          <h1>Find & Scrape Leads</h1>
+          <p class="subtitle">Search the world for businesses and extract their contact info.</p>
+        </header>
+
+        <!-- Business Search via OSM -->
+        <div class="outreach-form-container">
+          <h2>1. Global Business Search</h2>
+          <p class="subtitle" style="margin-bottom: 1rem;">Search using OpenStreetMap data (e.g., "bar" in "Fuengirola")</p>
+          <form id="search-form">
+            <div style="display:flex; gap:1rem;">
+              <input type="text" id="search-type" placeholder="Type (bar, club, restaurant)" required>
+              <input type="text" id="search-location" placeholder="City or Region" required>
+              <button type="submit" id="search-btn" class="action-btn primary">Search</button>
+            </div>
+          </form>
+          <div id="search-loader" class="hidden" style="margin-top: 10px; color: var(--accent);">Searching map...</div>
+          
+          <div id="search-results-container" class="hidden" style="margin-top: 2rem;">
+            <h3>Found Businesses: <span id="search-count">0</span></h3>
+            <div class="table-container" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;">
+              <table id="search-results-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Website</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border: 1px solid var(--border); margin: 3rem 0;">
+
+        <!-- Website Scraper -->
+        <div class="outreach-form-container">
+          <h2>2. Deep Website Scraper</h2>
+          <p class="subtitle" style="margin-bottom: 1rem;">Enter a website to extract hidden emails and phone numbers.</p>
+          <form id="scrape-form">
+            <div style="display:flex; gap:1rem;">
+              <input type="text" id="scrape-url" placeholder="https://example.com" required>
+              <button type="submit" id="scrape-btn" class="action-btn primary">Scrape Website</button>
+            </div>
+          </form>
+          <div id="scrape-loader" class="hidden" style="margin-top: 10px; color: var(--accent);">Scanning website...</div>
+        </div>
+
+        <div id="scrape-results" class="hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Results</h2>
+            <button id="save-scraped-lead-btn" class="action-btn primary">Save Lead to CRM</button>
+          </div>
+          <div class="results-grid">
+            <div class="result-card">
+              <h3>Target</h3>
+              <p id="res-url"></p>
+              <p id="res-title"></p>
+            </div>
+            <div class="result-card">
+              <h3>Emails Found</h3>
+              <ul id="res-emails"></ul>
+            </div>
+            <div class="result-card">
+              <h3>Phones Found</h3>
+              <ul id="res-phones"></ul>
+            </div>
+            <div class="result-card">
+              <h3>Socials</h3>
+              <ul id="res-socials"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
