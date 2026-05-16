@@ -312,31 +312,27 @@ app.post('/api/outreach/search', authMiddleware, async (req, res) => {
     const { type, location } = req.body;
     if (!type || !location) return res.status(400).json({ error: 'Type and location are required' });
 
-    // Format location to have first letter capitalized (Overpass requires exact match for area names)
-    const formattedLocation = location.charAt(0).toUpperCase() + location.slice(1).toLowerCase();
+    // Capitalize location for exact area name match
+    const formattedLocation = location.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    const typeEscaped = type.trim().toLowerCase();
 
-    // OpenStreetMap Overpass Query
-    // Search for amenities, leisure, tourism, or names matching the type in the specific location
-    const overpassQuery = `
-      [out:json][timeout:25];
-      area["name"="${formattedLocation}"]->.searchArea;
-      (
-        nwr["amenity"~"${type}",i](area.searchArea);
-        nwr["leisure"~"${type}",i](area.searchArea);
-        nwr["tourism"~"${type}",i](area.searchArea);
-        nwr["name"~"${type}",i](area.searchArea);
-      );
-      out center 30;
-    `;
+    // Simplified, fast Overpass QL query - only amenity tag which covers bars, clubs, restaurants etc.
+    const overpassQuery = `[out:json][timeout:30];area["name"="${formattedLocation}"]->.a;(node["amenity"~"${typeEscaped}",i](area.a);way["amenity"~"${typeEscaped}",i](area.a););out center 50;`;
 
-    const response = await axios.post('https://overpass-api.de/api/interpreter', `data=${encodeURIComponent(overpassQuery)}`, {
-      headers: { 
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-        'User-Agent': 'ASHING-CRM-App/1.0 (contact@alexashing.com)'
-      },
-      timeout: 15000
-    });
+    console.log('Overpass query:', overpassQuery);
+
+    const response = await axios.post(
+      'https://overpass-api.de/api/interpreter',
+      `data=${encodeURIComponent(overpassQuery)}`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+          'User-Agent': 'ASHING-CRM/1.0'
+        },
+        timeout: 55000  // 55s axios timeout, Overpass query times out at 30s
+      }
+    );
 
     const results = [];
     if (response.data && response.data.elements) {
@@ -345,18 +341,23 @@ app.post('/api/outreach/search', authMiddleware, async (req, res) => {
           results.push({
             name: el.tags.name,
             website: el.tags.website || el.tags['contact:website'] || '',
-            phone: el.tags.phone || el.tags['contact:phone'] || '',
-            address: el.tags['addr:street'] ? `${el.tags['addr:street']} ${el.tags['addr:housenumber'] || ''}` : '',
-            type: el.tags.amenity || el.tags.leisure || el.tags.tourism || type
+            phone: el.tags.phone || el.tags['contact:phone'] || el.tags['contact:mobile'] || '',
+            address: [el.tags['addr:street'], el.tags['addr:housenumber'], el.tags['addr:city']].filter(Boolean).join(' '),
+            type: el.tags.amenity || el.tags.leisure || el.tags.tourism || typeEscaped
           });
         }
       });
     }
 
+    console.log(`Search returned ${results.length} results for "${typeEscaped}" in "${formattedLocation}"`);
     res.json({ success: true, data: results });
   } catch (error) {
     console.error('Search error:', error.message);
-    res.status(500).json({ success: false, error: 'Failed to search area. ' + error.message });
+    if (error.code === 'ECONNABORTED') {
+      res.status(500).json({ success: false, error: 'Search timed out. Try a more specific type or location.' });
+    } else {
+      res.status(500).json({ success: false, error: 'Failed to search. ' + error.message });
+    }
   }
 });
 
