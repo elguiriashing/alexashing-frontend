@@ -1,2 +1,0 @@
-# Redirect all requests to out directory
-/*    /out/:splat 200
