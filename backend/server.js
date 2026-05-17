@@ -424,6 +424,73 @@ app.post('/api/outreach/scrape', authMiddleware, async (req, res) => {
   }
 });
 
+// Website Search Endpoint - Find business website by name and location
+app.post('/api/outreach/find-website', authMiddleware, async (req, res) => {
+  try {
+    const { businessName, location } = req.body;
+    if (!businessName) return res.status(400).json({ error: 'Business name is required' });
+
+    // Create search query
+    const searchQuery = location 
+      ? `${encodeURIComponent(businessName)} ${encodeURIComponent(location)} website`
+      : `${encodeURIComponent(businessName)} website`;
+
+    // Use DuckDuckGo HTML search (free, no API key needed)
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${searchQuery}`;
+    
+    const response = await axios.get(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 10000
+    });
+
+    const $ = cheerio.load(response.data);
+    const websites = [];
+
+    // Extract result links
+    $('.result__a').each((i, el) => {
+      if (websites.length >= 5) return false; // Limit to 5 results
+      
+      const href = $(el).attr('href');
+      const title = $(el).text().trim();
+      
+      // DuckDuckGo redirects through their link, extract actual URL
+      const urlMatch = href.match(/uddg=(.+?)&/);
+      if (urlMatch) {
+        try {
+          const actualUrl = decodeURIComponent(urlMatch[1]);
+          // Filter out non-website links
+          if (actualUrl.startsWith('http') && 
+              !actualUrl.includes('duckduckgo') && 
+              !actualUrl.includes('wikipedia') &&
+              !actualUrl.includes('yelp') &&
+              !actualUrl.includes('tripadvisor')) {
+            websites.push({
+              url: actualUrl,
+              title: title
+            });
+          }
+        } catch (e) {
+          // Skip invalid URLs
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        businessName,
+        location: location || '',
+        websites
+      }
+    });
+  } catch (error) {
+    console.error('Website search error:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to search for website. ' + error.message });
+  }
+});
+
 // Email Sending Endpoint
 app.post('/api/email/send', authMiddleware, async (req, res) => {
   try {
@@ -438,6 +505,9 @@ app.post('/api/email/send', authMiddleware, async (req, res) => {
       port: 465,
       secure: true,
       family: 4, // force IPv4
+      dnsOptions: {
+        family: 4 // force IPv4 DNS resolution
+      },
       auth: {
         user: process.env.SMTP_USER || 'your-email@gmail.com',
         pass: process.env.SMTP_PASS || 'your-app-password'
