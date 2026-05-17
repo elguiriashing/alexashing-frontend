@@ -442,10 +442,11 @@ document.getElementById('search-form').addEventListener('submit', async (e) => {
         const tr = document.createElement('tr');
         
         let websiteHTML = '-';
-        let scrapeBtn = '';
+        let websiteInput = '';
         if (biz.website) {
           websiteHTML = `<a href="${biz.website}" target="_blank" style="color:var(--text-main)">Link</a>`;
-          scrapeBtn = `<button class="action-btn" onclick="triggerScrape('${biz.website}', '${biz.name.replace(/'/g, "\\'")}')">Deep Scrape</button>`;
+        } else {
+          websiteInput = `<input type="text" placeholder="Enter website URL" id="website-input-${index}" style="width:150px; padding:4px; background:#222; color:#fff; border:1px solid #444; border-radius:4px; font-size:12px;">`;
         }
 
         const leadDataStr = encodeURIComponent(JSON.stringify({
@@ -455,14 +456,23 @@ document.getElementById('search-form').addEventListener('submit', async (e) => {
           location: biz.address || location
         }));
 
+        const scrapeAction = biz.website 
+          ? `<button class="action-btn" onclick="triggerScrape('${biz.website}', '${biz.name.replace(/'/g, "\\'")}', '${(biz.address || location).replace(/'/g, "\\'")}')">Deep Scrape</button>`
+          : `<button class="action-btn" onclick="triggerScrapeWithInput(${index}, '${biz.name.replace(/'/g, "\\'")}', '${(biz.address || location).replace(/'/g, "\\'")}')">Deep Scrape</button>`;
+
+        const findWebsiteBtn = !biz.website 
+          ? `<button class="action-btn" style="background:#6366f1;" onclick="findWebsite(${index}, '${biz.name.replace(/'/g, "\\'")}', '${(biz.address || location).replace(/'/g, "\\'")}')">Find Website</button>`
+          : '';
+
         tr.innerHTML = `
           <td>${biz.name}</td>
           <td>${biz.type}</td>
-          <td>${websiteHTML}</td>
+          <td>${websiteHTML} ${websiteInput}</td>
           <td>${biz.phone || '-'}</td>
-          <td style="display:flex;">
-            <button class="action-btn" onclick="triggerScrape('${biz.website}', '${biz.name.replace(/'/g, "\\'")}', '${(biz.address || location).replace(/'/g, "\\'")}')">Deep Scrape</button>
-            <button class="action-btn primary" onclick="saveLead(JSON.parse(decodeURIComponent('${leadDataStr}')))">+ CRM</button>
+          <td style="display:flex; gap:5px; flex-wrap:wrap;">
+            ${findWebsiteBtn}
+            ${scrapeAction}
+            <button class="action-btn primary" onclick="saveLeadWithWebsite(${index}, JSON.parse(decodeURIComponent('${leadDataStr}')))">+ CRM</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -488,6 +498,66 @@ function triggerScrape(url, name, address) {
   // Store the name and location temporarily so we can save it to CRM later
   window.lastScrapedBusinessName = name;
   window.lastScrapedLocation = address;
+}
+
+// Helper for manual website input deepscrape
+function triggerScrapeWithInput(index, name, address) {
+  const input = document.getElementById(`website-input-${index}`);
+  const url = input.value.trim();
+  if (!url) {
+    alert('Please enter a website URL first');
+    return;
+  }
+  triggerScrape(url, name, address);
+}
+
+// Helper to find website using search
+async function findWebsite(index, name, address) {
+  try {
+    const res = await fetchWithAuth(`${API_URL}/outreach/find-website`, {
+      method: 'POST',
+      body: JSON.stringify({ businessName: name, location: address })
+    });
+    
+    const json = await res.json();
+    if (json.success && json.data.websites && json.data.websites.length > 0) {
+      // Show websites in a prompt for user to select
+      const websites = json.data.websites;
+      let message = `Found ${websites.length} potential websites for "${name}":\n\n`;
+      websites.forEach((w, i) => {
+        message += `${i + 1}. ${w.title}\n   ${w.url}\n\n`;
+      });
+      message += 'Enter the number of the website to use, or click Cancel to skip:';
+      
+      const selection = prompt(message);
+      if (selection && !isNaN(selection)) {
+        const selectedIndex = parseInt(selection) - 1;
+        if (selectedIndex >= 0 && selectedIndex < websites.length) {
+          const selectedUrl = websites[selectedIndex].url;
+          const input = document.getElementById(`website-input-${index}`);
+          if (input) {
+            input.value = selectedUrl;
+          }
+          // Auto-trigger scrape after selection
+          triggerScrape(selectedUrl, name, address);
+        }
+      }
+    } else {
+      alert('No websites found for this business. Try entering a website manually.');
+    }
+  } catch (error) {
+    console.error('Find website error:', error);
+    alert('Failed to search for website. Please try entering it manually.');
+  }
+}
+
+// Helper to save lead with manually entered website
+function saveLeadWithWebsite(index, leadData) {
+  const input = document.getElementById(`website-input-${index}`);
+  if (input && input.value.trim()) {
+    leadData.website = input.value.trim();
+  }
+  saveLead(leadData);
 }
 
 // --- Outreach Deep Scraping Logic ---
