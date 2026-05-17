@@ -499,31 +499,51 @@ app.post('/api/email/send', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Configure nodemailer with IPv4 explicitly to fix ENETUNREACH on Railway
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      family: 4, // force IPv4
-      dnsOptions: {
-        family: 4 // force IPv4 DNS resolution
-      },
-      auth: {
-        user: process.env.SMTP_USER || 'your-email@gmail.com',
-        pass: process.env.SMTP_PASS || 'your-app-password'
-      }
-    });
+    // Use Resend API (HTTP-based, avoids SMTP/IPv6 issues)
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      const response = await axios.post('https://api.resend.com/emails', {
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: [to],
+        subject: subject,
+        text: text
+      }, {
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    const mailOptions = {
-      from: process.env.SMTP_USER || 'your-email@gmail.com',
-      to,
-      subject,
-      text
-    };
+      console.log('✅ Email sent via Resend:', response.data);
+      res.json({ success: true, message: 'Email sent successfully' });
+    } else {
+      // Fallback to SMTP if Resend not configured
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        family: 4,
+        tls: {
+          rejectUnauthorized: false
+        },
+        auth: {
+          user: process.env.SMTP_USER || 'your-email@gmail.com',
+          pass: process.env.SMTP_PASS || 'your-app-password'
+        }
+      });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent:', info.response);
-    res.json({ success: true, message: 'Email sent successfully' });
+      const mailOptions = {
+        from: process.env.SMTP_USER || 'your-email@gmail.com',
+        to,
+        subject,
+        text
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent via SMTP:', info.response);
+      res.json({ success: true, message: 'Email sent successfully' });
+    }
   } catch (error) {
     console.error('❌ Email send error:', error);
     res.status(500).json({ success: false, error: 'Failed to send email. ' + error.message });
