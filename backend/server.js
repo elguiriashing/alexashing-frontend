@@ -316,8 +316,30 @@ app.post('/api/outreach/search', authMiddleware, async (req, res) => {
     const formattedLocation = location.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     const typeEscaped = type.trim().toLowerCase();
 
-    // Simplified, fast Overpass QL query - only amenity tag which covers bars, clubs, restaurants etc.
-    const overpassQuery = `[out:json][timeout:30];area["name"="${formattedLocation}"]->.a;(node["amenity"~"${typeEscaped}",i](area.a);way["amenity"~"${typeEscaped}",i](area.a););out center 50;`;
+    // Expanded Overpass QL query - searches multiple tags for any business type
+    // Searches: amenity, shop, craft, leisure, tourism, office, healthcare, etc.
+    const overpassQuery = `[out:json][timeout:30];
+      area["name"="${formattedLocation}"]->.a;
+      (
+        node["name"~"${typeEscaped}",i](area.a);
+        way["name"~"${typeEscaped}",i](area.a);
+        node["amenity"~"${typeEscaped}",i](area.a);
+        way["amenity"~"${typeEscaped}",i](area.a);
+        node["shop"~"${typeEscaped}",i](area.a);
+        way["shop"~"${typeEscaped}",i](area.a);
+        node["craft"~"${typeEscaped}",i](area.a);
+        way["craft"~"${typeEscaped}",i](area.a);
+        node["leisure"~"${typeEscaped}",i](area.a);
+        way["leisure"~"${typeEscaped}",i](area.a);
+        node["tourism"~"${typeEscaped}",i](area.a);
+        way["tourism"~"${typeEscaped}",i](area.a);
+        node["office"~"${typeEscaped}",i](area.a);
+        way["office"~"${typeEscaped}",i](area.a);
+        node["healthcare"~"${typeEscaped}",i](area.a);
+        way["healthcare"~"${typeEscaped}",i](area.a);
+      );
+      out center 100;
+    `;
 
     console.log('Overpass query:', overpassQuery);
 
@@ -335,15 +357,21 @@ app.post('/api/outreach/search', authMiddleware, async (req, res) => {
     );
 
     const results = [];
+    const seenNames = new Set();
     if (response.data && response.data.elements) {
       response.data.elements.forEach(el => {
         if (el.tags && el.tags.name) {
+          // Deduplicate by name
+          const nameKey = el.tags.name.toLowerCase();
+          if (seenNames.has(nameKey)) return;
+          seenNames.add(nameKey);
+
           results.push({
             name: el.tags.name,
             website: el.tags.website || el.tags['contact:website'] || '',
             phone: el.tags.phone || el.tags['contact:phone'] || el.tags['contact:mobile'] || '',
-            address: [el.tags['addr:street'], el.tags['addr:housenumber'], el.tags['addr:city']].filter(Boolean).join(' '),
-            type: el.tags.amenity || el.tags.leisure || el.tags.tourism || typeEscaped
+            address: [el.tags['addr:street'], el.tags['addr:housenumber'], el.tags['addr:city'], el.tags['addr:postcode']].filter(Boolean).join(' '),
+            type: el.tags.amenity || el.tags.shop || el.tags.craft || el.tags.leisure || el.tags.tourism || el.tags.office || el.tags.healthcare || typeEscaped
           });
         }
       });
@@ -421,6 +449,126 @@ app.post('/api/outreach/scrape', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Scrape error:', error.message);
     res.status(500).json({ success: false, error: 'Failed to scrape URL. ' + error.message });
+  }
+});
+
+// Bulk Import Endpoint - Scrape websites and import qualified leads
+app.post('/api/outreach/bulk-import', authMiddleware, async (req, res) => {
+  try {
+    const { results, location } = req.body;
+    if (!results || !Array.isArray(results)) {
+      return res.status(400).json({ error: 'Results array is required' });
+    }
+
+    console.log(`Starting bulk import for ${results.length} results...`);
+    const importedLeads = [];
+    const skippedLeads = [];
+    const scrapeErrors = [];
+
+    // Process each result
+    for (const biz of results) {
+      try {
+        let emails = [];
+        let phones = biz.phone ? [biz.phone] : [];
+        let socials = [];
+        let website = biz.website;
+
+        // If website exists, scrape it for additional info
+        if (website) {
+          try {
+            let targetUrl = website;
+            if (!/^https?:\/\//i.test(website)) {
+              targetUrl = 'https://' + website;
+            }
+
+            const response = await axios.get(targetUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+              },
+              timeout: 8000
+            });
+
+            const html = response.data;
+            const $ = cheerio.load(html);
+
+            // Scrape emails
+            const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+            const rawEmails = html.match(emailRegex) || [];
+            emails = [...new Set(rawEmails)].filter(e => !e.endsWith('.png') && !e.endsWith('.jpg') && !e.endsWith('.webp'));
+
+            // Scrape phone numbers
+            const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+            const rawPhones = html.match(phoneRegex) || [];
+            const scrapedPhones = [...new Set(rawPhones)].filter(p => p.length >= 10);
+            phones = [...new Set([...phones, ...scrapedPhones])];
+
+            // Extract social links
+            const socialLinks = [];
+            $('a').each((i, el) => {
+              const href = $(el).attr('href');
+              if (href && (href.includes('instagram.com') || href.includes('linkedin.com') || href.includes('twitter.com') || href.includes('facebook.com'))) {
+                socialLinks.push(href);
+              }
+            });
+            socials = [...new Set(socialLinks)];
+
+            console.log(`✅ Scraped ${biz.name}: ${emails.length} emails, ${phones.length} phones`);
+          } catch (scrapeError) {
+            console.log(`⚠️ Failed to scrape ${biz.name}: ${scrapeError.message}`);
+            scrapeErrors.push({ name: biz.name, error: scrapeError.message });
+          }
+        }
+
+        // Check if lead qualifies: must have website AND/OR phone AND/OR email
+        const hasWebsite = !!website;
+        const hasPhone = phones.length > 0;
+        const hasEmail = emails.length > 0;
+
+        if (hasWebsite || hasPhone || hasEmail) {
+          // Create lead
+          const lead = new Lead({
+            businessName: biz.name,
+            website: website || '',
+            emails: emails,
+            phones: phones,
+            location: biz.address || location || '',
+            socials: socials,
+            status: 'scraped'
+          });
+
+          await lead.save();
+          importedLeads.push({
+            name: biz.name,
+            website: website || 'N/A',
+            emails: emails.length,
+            phones: phones.length
+          });
+          console.log(`✅ Imported: ${biz.name}`);
+        } else {
+          skippedLeads.push({ name: biz.name, reason: 'No website, phone, or email found' });
+          console.log(`⏭️ Skipped: ${biz.name} (no contact info)`);
+        }
+      } catch (error) {
+        console.error(`❌ Error processing ${biz.name}:`, error.message);
+        skippedLeads.push({ name: biz.name, error: error.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total: results.length,
+        imported: importedLeads.length,
+        skipped: skippedLeads.length,
+        scrapeErrors: scrapeErrors.length,
+        importedLeads,
+        skippedLeads,
+        scrapeErrors
+      }
+    });
+  } catch (error) {
+    console.error('Bulk import error:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to bulk import. ' + error.message });
   }
 });
 
@@ -502,10 +650,48 @@ app.post('/api/email/send', authMiddleware, async (req, res) => {
     // Use Resend API (HTTP-based, avoids SMTP/IPv6 issues)
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
+      // Create HTML email template
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${subject}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; }
+            .header h1 { color: white; margin: 0; font-size: 24px; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 8px; margin-top: 20px; }
+            .content p { margin-bottom: 15px; }
+            .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; margin-top: 30px; }
+            .footer a { color: #667eea; text-decoration: none; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>ASHING</h1>
+            </div>
+            <div class="content">
+              <p>${text.replace(/\n/g, '<br>')}</p>
+            </div>
+            <div class="footer">
+              <p>This email was sent from ASHING CRM</p>
+              <p><a href="https://alexashing.com">alexashing.com</a></p>
+              <p>You're receiving this email because you're in our contact database.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
       const response = await axios.post('https://api.resend.com/emails', {
         from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
         to: [to],
         subject: subject,
+        html: html,
         text: text
       }, {
         headers: {
