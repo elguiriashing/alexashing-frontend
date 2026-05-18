@@ -412,6 +412,9 @@ document.getElementById('email-form').addEventListener('submit', async (e) => {
 });
 
 // --- Outreach Business Search Logic (OSM) ---
+let lastSearchResults = [];
+let lastSearchLocation = '';
+
 document.getElementById('search-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -436,6 +439,8 @@ document.getElementById('search-form').addEventListener('submit', async (e) => {
     const json = await res.json();
     
     if (json.success && json.data) {
+      lastSearchResults = json.data;
+      lastSearchLocation = location;
       document.getElementById('search-count').innerText = json.data.length;
       
       json.data.forEach((biz, index) => {
@@ -559,6 +564,69 @@ function saveLeadWithWebsite(index, leadData) {
   }
   saveLead(leadData);
 }
+
+// Bulk Import Function
+document.getElementById('bulk-import-btn').addEventListener('click', async () => {
+  if (lastSearchResults.length === 0) {
+    alert('No search results to import. Please search for businesses first.');
+    return;
+  }
+
+  if (!confirm(`This will scrape websites for all ${lastSearchResults.length} results and import those with contact info (website/phone/email). This may take a while. Continue?`)) {
+    return;
+  }
+
+  const btn = document.getElementById('bulk-import-btn');
+  btn.disabled = true;
+  btn.innerText = 'Processing...';
+
+  try {
+    const res = await fetchWithAuth(`${API_URL}/outreach/bulk-import`, {
+      method: 'POST',
+      body: JSON.stringify({ results: lastSearchResults, location: lastSearchLocation })
+    });
+
+    const json = await res.json();
+    if (json.success) {
+      const { total, imported, skipped, scrapeErrors, importedLeads, skippedLeads } = json.data;
+      
+      let message = `Bulk Import Complete!\n\n`;
+      message += `Total results: ${total}\n`;
+      message += `Imported: ${imported}\n`;
+      message += `Skipped: ${skipped}\n`;
+      message += `Scrape errors: ${scrapeErrors}\n\n`;
+
+      if (importedLeads.length > 0) {
+        message += `Imported leads:\n`;
+        importedLeads.forEach(lead => {
+          message += `✓ ${lead.name} (${lead.emails} emails, ${lead.phones} phones)\n`;
+        });
+      }
+
+      if (skippedLeads.length > 0) {
+        message += `\nSkipped leads:\n`;
+        skippedLeads.slice(0, 5).forEach(lead => {
+          message += `✗ ${lead.name} - ${lead.reason || lead.error}\n`;
+        });
+        if (skippedLeads.length > 5) {
+          message += `... and ${skippedLeads.length - 5} more\n`;
+        }
+      }
+
+      alert(message);
+      loadLeads();
+      loadDashboardData();
+    } else {
+      alert(json.error || 'Bulk import failed');
+    }
+  } catch (error) {
+    console.error('Bulk import error:', error);
+    alert('An error occurred during bulk import. Please try again.');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Bulk Import All (Scrape Websites)';
+  }
+});
 
 // --- Outreach Deep Scraping Logic ---
 let lastScrapedData = null;

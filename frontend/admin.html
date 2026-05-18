@@ -208,7 +208,10 @@
           <div id="search-loader" class="hidden" style="margin-top: 10px; color: var(--accent);">Searching map...</div>
           
           <div id="search-results-container" class="hidden" style="margin-top: 2rem;">
-            <h3>Found Businesses: <span id="search-count">0</span></h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3>Found Businesses: <span id="search-count">0</span></h3>
+              <button id="bulk-import-btn" class="action-btn primary" style="background: #10b981;">Bulk Import All (Scrape Websites)</button>
+            </div>
             <div class="table-container" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;">
               <table id="search-results-table">
                 <thead>
