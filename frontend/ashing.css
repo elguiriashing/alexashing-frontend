@@ -11,5 +11,5 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}.observe,.intro-reveal{opacity:1;transform:none}}
 
 /* Optical separation: condensed display faces extend beyond their line box. */
-.hero h1 .outline{margin-top:.065em}.contact h2 span+span{margin-top:.14em}
+.hero>.eyebrow{top:13%}.coordinates{right:4vw;bottom:22px}.hero h1 .outline{margin-top:.065em}.contact h2 span+span{margin-top:.14em}
 @media(max-width:850px){.hero h1 .outline{margin-top:.1em}.contact h2 span+span{margin-top:.16em}}
