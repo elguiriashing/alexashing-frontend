@@ -18,9 +18,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="ashing.css?v=wow3">
+  <link rel="icon" href="favicon.svg?v=1" type="image/svg+xml">
+  <link rel="stylesheet" href="ashing.css?v=wow4">
 </head>
 <body>
+  <div class="world-wash" aria-hidden="true"></div>
+  <div class="departure" aria-hidden="true"><div class="departure__iris"></div><p>Opening world <span>↗</span></p></div>
   <div class="boot" aria-hidden="true"><div class="boot-count">00</div><div class="boot-line"><i></i></div><p>INITIALISING WORLDS</p></div>
   <canvas id="starfield" aria-hidden="true"></canvas>
   <div class="noise" aria-hidden="true"></div>
@@ -49,17 +52,17 @@
     <section class="worlds" id="worlds" aria-labelledby="worlds-title">
       <div class="worlds-heading observe"><p class="section-index">[ 002 / SELECT A WORLD ]</p><h2 id="worlds-title">The portals</h2><p>Three independent universes.<br>Move closer.</p></div>
 
-      <a class="portal portal-aki observe" href="https://akipasa.com" target="_blank" rel="noopener">
+      <a id="akipasa" class="portal portal-aki observe" href="https://akipasa.com" target="_blank" rel="noopener">
         <div class="portal-visual"><div class="portal-glow"></div><div class="sun"></div><div class="map-grid"></div><div class="radar"></div><div class="aki-pin">A</div><span class="place p1">FUENGIROLA</span><span class="place p2">MÁLAGA</span><span class="place p3">WHAT'S ON?</span></div>
         <div class="portal-copy"><div class="portal-meta"><span>01 / CURRENT FOCUS</span><span>LOCAL DISCOVERY PLATFORM</span></div><h3>AkiPasa<span>.</span></h3><p>What’s happening, where you are. A local-first platform connecting people with events, places and the life unfolding around them.</p><span class="portal-enter">Discover AkiPasa <b>↗</b></span></div>
       </a>
 
-      <a class="portal portal-social observe" href="https://socialclubamsterdam.com" target="_blank" rel="noopener">
+      <a id="socialclub" class="portal portal-social observe" href="https://socialclubamsterdam.com" target="_blank" rel="noopener">
         <div class="portal-visual"><div class="portal-glow"></div><div class="arcade"><div class="scan"></div><span>INSERT<br>COMMUNITY</span><i></i></div><div class="pixels">✦ &nbsp; + &nbsp; ✦</div></div>
         <div class="portal-copy"><div class="portal-meta"><span>02 / COMMUNITY</span><span>MEMBERS' CLUB</span></div><h3>Social Club<br>Amsterdam<span>.</span></h3><p>A private community in Fuengirola with an unmistakable arcade soul — welcoming, playful and built for members.</p><span class="portal-enter">Enter the club <b>↗</b></span></div>
       </a>
 
-      <a class="portal portal-sierra observe" href="https://sierraadsels.nl" target="_blank" rel="noopener">
+      <a id="sierra" class="portal portal-sierra observe" href="https://sierraadsels.nl" target="_blank" rel="noopener">
         <div class="portal-visual"><div class="portal-glow"></div><div class="silver-orbit so1"></div><div class="silver-orbit so2"></div><div class="jewel">S</div><span class="hallmark">925 / UNIQUE / HANDMADE</span></div>
         <div class="portal-copy"><div class="portal-meta"><span>03 / CRAFT</span><span>HANDMADE SILVER</span></div><h3>Sierraadsels<span>.</span></h3><p>A restrained digital gallery for Tilly’s one-of-a-kind handmade silver jewellery — tactile, personal and quietly expressive.</p><span class="portal-enter">View the collection <b>↗</b></span></div>
       </a>
@@ -71,5 +74,6 @@
   </main>
 
   <footer><a class="wordmark" href="#top">A<span>/</span>A</a><p>Designed & built by Alex Ashing<br><span>© 2026 · Fuengirola, Spain</span></p><a href="#top">Back to top ↑</a></footer>
-  <script src="app.js?v=wow3"></script>
+  <nav class="world-rail" aria-label="Project worlds"><a href="#akipasa" data-world="aki"><b>01</b><span>AkiPasa</span></a><a href="#socialclub" data-world="social"><b>02</b><span>Social Club</span></a><a href="#sierra" data-world="sierra"><b>03</b><span>Sierra</span></a></nav>
+  <script src="app.js?v=wow4"></script>
 </body></html>
