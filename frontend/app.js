@@ -18,12 +18,19 @@ const canvas=document.querySelector('#starfield'),ctx=canvas.getContext('2d',{al
 // Tactile, thumb-first behavior for the mobile experience.
 const mobile=matchMedia('(max-width:850px)').matches,dock=document.querySelector('.mobile-dock');
 if(mobile){
-  let lastY=scrollY;
+  let lastY=scrollY,tiltX=0,tiltY=0;
   addEventListener('scroll',()=>{const delta=scrollY-lastY;dock?.classList.toggle('is-hidden',delta>12&&scrollY>innerHeight*.45);if(delta< -8)dock?.classList.remove('is-hidden');lastY=scrollY},{passive:true});
   addEventListener('pointermove',e=>{root.style.setProperty('--touch-x',e.clientX+'px');root.style.setProperty('--touch-y',e.clientY+'px')},{passive:true});
   document.querySelectorAll('.portal,.round-link,.mobile-dock a').forEach(el=>el.addEventListener('pointerdown',e=>{if(reduced)return;const wave=document.createElement('i');wave.className='touch-wave';wave.style.left=e.clientX+'px';wave.style.top=e.clientY+'px';document.body.appendChild(wave);setTimeout(()=>wave.remove(),650)}));
   if(!reduced){
-    const mobileParallax=()=>{document.querySelectorAll('.portal').forEach(card=>{const r=card.getBoundingClientRect(),visual=card.querySelector('.portal-visual');if(r.bottom>0&&r.top<innerHeight&&visual){const p=(r.top-innerHeight*.5)/innerHeight;visual.style.transform=`translate3d(0,${p*18}px,0) scale(1.06)`}});requestAnimationFrame(mobileParallax)};
+    const mobileParallax=()=>{document.querySelectorAll('.portal').forEach(card=>{const r=card.getBoundingClientRect(),visual=card.querySelector('.portal-visual');if(r.bottom>0&&r.top<innerHeight&&visual){const p=(r.top-innerHeight*.5)/innerHeight;visual.style.transform=`perspective(900px) translate3d(${tiltX*.55}px,${p*18+tiltY*.25}px,0) rotateX(${-tiltY*.12}deg) rotateY(${tiltX*.12}deg) scale(1.085)`}});requestAnimationFrame(mobileParallax)};
     mobileParallax();
   }
+  const motionButton=document.querySelector('.motion-toggle');
+  if('DeviceOrientationEvent' in window&&!reduced){
+    motionButton?.classList.add('is-supported');
+    const orient=e=>{tiltX=Math.max(-18,Math.min(18,e.gamma||0));tiltY=Math.max(-18,Math.min(18,(e.beta||0)-35));root.style.setProperty('--horizon',(-tiltX*.75)+'deg')};
+    motionButton?.addEventListener('click',async()=>{let allowed=true;try{if(typeof DeviceOrientationEvent.requestPermission==='function')allowed=(await DeviceOrientationEvent.requestPermission())==='granted'}catch{allowed=false}if(allowed){addEventListener('deviceorientation',orient,{passive:true});document.body.classList.add('motion-on');motionButton.setAttribute('aria-pressed','true');motionButton.querySelector('span').textContent='Tilt active';navigator.vibrate?.(12)}else{motionButton.querySelector('span').textContent='Motion unavailable'}});
+  }
+  document.querySelectorAll('.mobile-dock a,.round-link').forEach(el=>el.addEventListener('click',()=>navigator.vibrate?.(7)));
 }

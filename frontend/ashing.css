@@ -35,3 +35,22 @@
 }
 @media(max-width:390px){.portal h3{font-size:16.4vw}.portal-social h3,.portal-sierra h3{font-size:13.7vw}.hero-bottom>p{max-width:195px}.mobile-dock{grid-template-columns:46px repeat(3,1fr) 42px}}
 @media(prefers-reduced-motion:reduce){.mobile-orb{display:none}.signal-dot{animation:none}.touch-wave{display:none}}
+
+/* WOW 06 — a phone becomes a viewport into the worlds */
+.motion-toggle,.mobile-horizon{display:none}
+@media(max-width:850px){
+  html{scroll-snap-type:y proximity}
+  .portal,.contact{scroll-snap-align:start;scroll-snap-stop:normal}
+  .portal-visual{transform-origin:50% 55%;will-change:transform,filter;transition:filter .5s ease}
+  .portal-visual::after{content:"";position:absolute;inset:-20%;z-index:10;pointer-events:none;background:linear-gradient(112deg,transparent 25%,rgba(255,255,255,.17) 46%,transparent 61%);translate:-80% 0;mix-blend-mode:overlay;animation:portalSheen 5.8s cubic-bezier(.4,0,.2,1) infinite}
+  .portal-social .portal-visual::after{animation-delay:-1.9s}.portal-sierra .portal-visual::after{animation-delay:-3.8s}
+  @keyframes portalSheen{0%,62%{translate:-80% 0}82%,100%{translate:80% 0}}
+  .portal-aki{--world-label:"01"}.portal-social{--world-label:"02"}.portal-sierra{--world-label:"03"}.portal-copy::after{content:"WORLD " var(--world-label);position:absolute;right:-.03em;bottom:-.16em;font:27vw/.8 var(--display);letter-spacing:-.05em;color:rgba(255,255,255,.025);white-space:nowrap;pointer-events:none}
+  .portal-copy{overflow:hidden}.portal-copy>*{position:relative;z-index:2}
+  .mobile-horizon{display:block;position:fixed;z-index:3;inset:50% 0 auto;pointer-events:none;opacity:0;transition:opacity .5s}.motion-on .mobile-horizon{opacity:.32}.mobile-horizon span{display:block;height:1px;width:100%;background:linear-gradient(90deg,transparent,var(--portal-hue,var(--orange)),transparent);transform:rotate(var(--horizon,0deg));box-shadow:0 0 18px var(--portal-hue,var(--orange))}.mobile-horizon i{position:absolute;width:5px;height:5px;border:1px solid var(--paper);border-radius:50%;left:50%;top:-2px;translate:-50%}
+  body[data-world="aki"]{--portal-hue:var(--orange)}body[data-world="social"]{--portal-hue:var(--green)}body[data-world="sierra"]{--portal-hue:var(--silver)}
+  .motion-toggle.is-supported{display:flex;position:fixed;z-index:96;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));align-items:center;gap:7px;border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:8px 11px;background:rgba(8,9,11,.7);color:#aaa;backdrop-filter:blur(15px);font:7px var(--mono);letter-spacing:.1em;text-transform:uppercase;transition:color .3s,border-color .3s,transform .3s}.motion-toggle i{width:7px;height:7px;border-radius:50%;background:#666;box-shadow:0 0 0 0 transparent}.motion-toggle[aria-pressed="true"]{color:var(--paper);border-color:var(--portal-hue,var(--orange))}.motion-toggle[aria-pressed="true"] i{background:var(--portal-hue,var(--orange));box-shadow:0 0 12px var(--portal-hue,var(--orange))}.mobile-dock.is-hidden~.motion-toggle{transform:translateY(90px)}
+  .motion-on .portal.in .portal-visual{filter:saturate(1.12) contrast(1.04)}
+  .portal.in h3{animation:titleBreath 4s ease-in-out infinite}@keyframes titleBreath{50%{letter-spacing:.005em}}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-snap-type:none}.portal-visual::after,.portal.in h3{animation:none}.motion-toggle,.mobile-horizon{display:none!important}}
