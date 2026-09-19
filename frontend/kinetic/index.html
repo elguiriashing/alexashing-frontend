@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#030308">
+  <title>Kinetic Light — Alex Ashing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="kinetic.css?v=1">
+</head>
+<body>
+  <canvas id="visual" aria-label="Kinetic generative visual"></canvas>
+  <div class="shade" aria-hidden="true"></div>
+
+  <header class="topbar ui">
+    <div class="brand"><i></i><span>KINETIC LIGHT</span><b id="fps">60 FPS</b></div>
+    <div class="top-actions">
+      <button id="castBtn" class="icon-btn" type="button" aria-label="Cast visual" title="Cast visual">
+        <svg viewBox="0 0 24 24"><path d="M3 18a3 3 0 0 1 3 3M3 13a8 8 0 0 1 8 8M3 8a13 13 0 0 1 13 13M5 4h14a2 2 0 0 1 2 2v11"/></svg>
+      </button>
+      <button id="audioBtn" class="icon-btn" type="button" aria-label="Use microphone" title="Use microphone">
+        <svg viewBox="0 0 24 24"><path d="M12 15a4 4 0 0 0 4-4V5a4 4 0 1 0-8 0v6a4 4 0 0 0 4 4Zm-7-4a7 7 0 0 0 14 0M12 18v4m-4 0h8"/></svg>
+      </button>
+      <label class="icon-btn" title="Load audio" aria-label="Load audio">
+        <svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 9l11-2M6 21c2 0 3-1 3-3s-1-3-3-3-4 1-4 3 2 3 4 3Zm11-2c2 0 3-1 3-3s-1-3-3-3-4 1-4 3 2 3 4 3Z"/></svg>
+        <input id="audioFile" type="file" accept="audio/*">
+      </label>
+      <button id="fullscreenBtn" class="icon-btn" type="button" aria-label="Fullscreen" title="Fullscreen">
+        <svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5"/></svg>
+      </button>
+      <button id="hideBtn" class="icon-btn" type="button" aria-label="Hide controls" title="Hide controls (H)">
+        <svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <aside class="panel ui" aria-label="Visual controls">
+    <div class="panel-head"><div><span>LIVE GENERATOR</span><h1 id="presetName">Lucid Bloom</h1></div><button id="randomBtn" class="dice" type="button" aria-label="Randomise" title="Randomise (R)">✦</button></div>
+
+    <div class="preset-strip" id="presets" aria-label="Presets"></div>
+
+    <section>
+      <div class="section-title"><span>LAYER A</span><b id="shapeALabel">Bloom</b></div>
+      <label>Form<select id="shapeA"></select></label>
+      <label>Spin <output id="speedAOut"></output><input id="speedA" type="range" min="-2" max="2" step=".01"></label>
+      <label>Complexity <output id="complexityAOut"></output><input id="complexityA" type="range" min="3" max="32" step="1"></label>
+      <label>Scale <output id="scaleAOut"></output><input id="scaleA" type="range" min=".15" max="1.35" step=".01"></label>
+    </section>
+
+    <section>
+      <div class="section-title"><span>LAYER B</span><b id="shapeBLabel">Orbit</b></div>
+      <label>Form<select id="shapeB"></select></label>
+      <label>Spin <output id="speedBOut"></output><input id="speedB" type="range" min="-2" max="2" step=".01"></label>
+      <label>Complexity <output id="complexityBOut"></output><input id="complexityB" type="range" min="3" max="32" step="1"></label>
+      <label>Scale <output id="scaleBOut"></output><input id="scaleB" type="range" min=".15" max="1.35" step=".01"></label>
+    </section>
+
+    <section>
+      <div class="section-title"><span>LIGHT</span><b id="paletteLabel">Ultraviolet</b></div>
+      <label>Palette<select id="palette"></select></label>
+      <label>Glow <output id="glowOut"></output><input id="glow" type="range" min="0" max="2" step=".01"></label>
+      <label>Trails <output id="trailOut"></output><input id="trail" type="range" min="0" max=".97" step=".01"></label>
+      <label>Pulse <output id="pulseOut"></output><input id="pulse" type="range" min="0" max="1" step=".01"></label>
+      <label>Blend<select id="blend"><option value="lighter">Light</option><option value="screen">Screen</option><option value="difference">Difference</option><option value="source-over">Clean</option></select></label>
+    </section>
+
+    <div class="panel-foot"><span><kbd>H</kbd> HIDE</span><span><kbd>F</kbd> FULLSCREEN</span><span><kbd>R</kbd> RANDOM</span></div>
+  </aside>
+
+  <div class="status ui"><span id="audioStatus">AUDIO OFF</span><i></i><span id="modeStatus">DRIFT MODE</span></div>
+  <button class="restore" id="restoreBtn" type="button">SHOW CONTROLS · H</button>
+  <dialog id="castDialog">
+    <button class="dialog-close" type="button" aria-label="Close">×</button>
+    <span class="dialog-kicker">PROJECTOR LINK</span>
+    <h2>Cast Kinetic Light</h2>
+    <p id="castMessage">Choose your display from the browser’s device picker.</p>
+    <button id="castLaunch" class="dialog-action" type="button">Find displays</button>
+    <div class="cast-help"><b>If no picker appears</b><span>Chrome menu → Cast, save and share → Cast tab</span><span>Then tap <strong>H</strong> to hide the controls.</span></div>
+  </dialog>
+  <audio id="audio" crossorigin="anonymous"></audio>
+  <script src="kinetic.js?v=1"></script>
+</body>
+</html>
