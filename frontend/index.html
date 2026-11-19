@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#0b0c0e">
   <meta name="color-scheme" content="dark">
   <meta name="robots" content="noindex, nofollow">
@@ -25,10 +25,38 @@
   <main class="stage" aria-label="Light sculpture">
     <div class="room" aria-hidden="true"></div>
     <div class="cast" aria-hidden="true"></div>
-    <figure class="sculpture" role="img" aria-label="A polished metal symbol floating above a pool of amber light.">
-      <img class="still" src="/object.webp" alt="" width="720" height="720" fetchpriority="high">
-    </figure>
+    <div class="composition">
+      <figure class="sculpture" role="img" aria-label="A polished metal symbol floating above a pool of amber light.">
+        <img class="still" src="/object.webp" alt="" width="720" height="720" fetchpriority="high">
+      </figure>
+      <img class="afterglow" src="/afterglow.webp" width="920" height="272" alt="An out-of-focus wordmark." draggable="false">
+      <form class="signup" action="/api/signup" method="post" aria-label="Launch updates">
+        <div class="signup-line">
+          <label class="visually-hidden" for="email">Your email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email"
+                 autocapitalize="none" spellcheck="false" maxlength="254" required
+                 pattern="[^@\s]+@[^@\s]+\.[^@\s]+" placeholder="Your email address"
+                 aria-describedby="signup-purpose signup-status">
+          <button class="submit-email" type="submit"><span>Notify me</span><span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="signup-notes">
+          <p id="signup-purpose">Email me launch updates from Alex Ashing.</p>
+          <button class="privacy-trigger" type="button" popovertarget="privacy-note">Privacy</button>
+        </div>
+        <p class="signup-status" id="signup-status" role="status" aria-live="polite"></p>
+        <p class="return-status" id="joined">You're on the list.</p>
+        <p class="return-status" id="check-email">Check your email address and try again.</p>
+        <p class="return-status" id="try-again">Couldn’t save just now. Please try again.</p>
+      </form>
+    </div>
+    <aside id="privacy-note" popover aria-labelledby="privacy-heading">
+      <h2 id="privacy-heading">About your email</h2>
+      <p>Alex Ashing uses your email to send updates about this launch. Signing up is optional. Cloudflare stores your address, signup time and consent in the EU.</p>
+      <p>You can withdraw consent or ask to see, correct or delete your details at any time. <a href="mailto:contact@alexashing.com">contact@alexashing.com</a></p>
+      <button type="button" popovertarget="privacy-note" popovertargetaction="hide">Close</button>
+    </aside>
   </main>
   <script type="module" src="/scene.js"></script>
+  <script type="module" src="/signup.js"></script>
 </body>
 </html>
