@@ -98,7 +98,7 @@ async function illuminate() {
     if (pointer && event.pointerId===pointer.id) {
       const dx=event.clientX-pointer.x, dy=event.clientY-pointer.y;
       pointer.travel=Math.max(pointer.travel,Math.hypot(dx,dy));
-      targetX=rest.x+clamp(dx/sculpture.clientWidth*2.1,1.05);
+      targetX=rest.x-clamp(dx/sculpture.clientWidth*2.1,1.05);
       targetY=rest.y+clamp(dy/sculpture.clientHeight*1.5,.55);
     } else if (!pointer && event.pointerType==='mouse') {
       const box=sculpture.getBoundingClientRect();
