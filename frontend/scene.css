@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+:root { background: #0b0c0e; color-scheme: dark; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+.stage {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; place-items: center;
+  height: 100%; height: 100dvh;
+  background: radial-gradient(ellipse at 50% 65%, #302016, #101114 55%, #090a0c 87%);
+}
+.room, .cast, .sculpture, .still, canvas { -webkit-user-select: none; user-select: none; }
+.room {
+  position: absolute; inset: 0; pointer-events: none;
+  background: center center / 100% 100% no-repeat url('/studio.webp');
+}
+.cast {
+  position: absolute; width: min(38vw, 58vh); height: min(6vh, 52px); top: 69%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse closest-side, #030406c9, transparent);
+  transform: rotate(-4deg);
+}
+.sculpture {
+  position: relative; padding: 0; margin: 0; width: min(76vw, 78vh, 850px);
+  width: min(76vw, 78dvh, 850px); aspect-ratio: 1; translate: 0 -5%;
+  -webkit-tap-highlight-color: transparent;
+}
+.sculpture[data-ready] { cursor: grab; touch-action: pinch-zoom; }
+.sculpture[data-dragging] { cursor: grabbing; }
+.sculpture:focus-visible { outline: 1px solid #cdb298; outline-offset: -10px; border-radius: 18%; }
+.still, canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.still { -webkit-user-drag: none; }
+.sculpture[data-ready] .still { visibility: hidden; }
+canvas { display: block; }
+@media (max-aspect-ratio: 4/5) {
+  .room { background-size: auto 100%; }
+  .sculpture { width: min(94vw, 72dvh); translate: 0 -3%; }
+  .cast { width: 65vw; top: calc(50% + min(27.5vw, 21dvh)); }
+  .room { inset: -17% 0 0; background-position: 49% center; }
+}
